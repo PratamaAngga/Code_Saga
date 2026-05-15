@@ -1,0 +1,15 @@
+# Environment variables - JANGAN pernah di-commit ke git!
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Dependencies (kalau nanti pakai npm)
+node_modules/
