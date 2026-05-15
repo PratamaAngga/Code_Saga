@@ -96,7 +96,7 @@ forgotLink.addEventListener('click', async (e) => {
   forgotLink.style.pointerEvents = 'none';
 
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: 'http://127.0.0.1:5500/floor.html'
+    redirectTo: 'http://127.0.0.1:5500/index.html'
   });
 
   forgotLink.textContent = 'Forgot password?';
@@ -173,7 +173,7 @@ authForm.addEventListener('submit', async (e) => {
       }
 
       // Redirect ke halaman utama setelah login
-      window.location.href = 'http://127.0.0.1:5500/floor.html';
+      window.location.href = 'http://127.0.0.1:5500/index.html';
     }
 
   } catch (err) {
@@ -197,7 +197,7 @@ googleBtn.addEventListener('click', async () => {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/floor.html'
+      redirectTo: window.location.origin + '/index.html'
     }
   });
 
@@ -213,6 +213,6 @@ googleBtn.addEventListener('click', async () => {
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
-    window.location.href = 'floor.html';
+    window.location.href = 'index.html';
   }
 })();

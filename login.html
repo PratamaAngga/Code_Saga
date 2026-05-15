@@ -161,7 +161,7 @@
         if (document.getElementById('rememberMe').checked) {
           localStorage.setItem('cs_remember', '1');
         }
-        window.location.href = 'floor.html'; // ← GANTI sesuai halaman tujuan
+        window.location.href = 'index.html'; // ← GANTI sesuai halaman tujuan
       } catch (err) {
         alert('Login failed: ' + err.message);
         loginBtn.disabled = false;
@@ -173,7 +173,7 @@
     document.getElementById('googleBtn').addEventListener('click', async () => {
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: 'http://127.0.0.1:5500/floor.html' }
+        options: { redirectTo: 'http://127.0.0.1:5500/index.html' }
       });
       if (error) alert('Google login error: ' + error.message);
     });
