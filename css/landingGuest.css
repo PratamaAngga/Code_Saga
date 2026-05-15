@@ -1,0 +1,69 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Jersey+25&display=swap');
+
+body {
+    font-family: 'Jersey 25', sans-serif;
+    /* Warna Hijau Rumput untuk sisa halaman */
+    background-color: #1F7F41; 
+    /* Gambar Langit/Background utama di bagian atas */
+    background-image: url("../assets/images/orig.png");
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: 100% auto; 
+    image-rendering: pixelated;
+    margin: 0;
+}
+
+/* Membuat aset gambar terlihat pixelated (retro) */
+img {
+    image-rendering: pixelated;
+}
+
+/* Styling Box Konten Utama */
+.pixel-box {
+    background-color: white !important;
+    border: 6px solid #5a3a22; /* Warna cokelat sesuai mockup */
+    border-radius: 50px !important; /* Membuat lengkungan yang gagah */
+    box-shadow: inset 0 0 0 4px #8b5a2b; 
+}
+
+/* Styling Box untuk Bos */
+.boss-card {
+    background-color: #f7eed7 !important; 
+    border: 4px solid #5a3a22;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+/* Banner Merah Bawah */
+.bottom-banner {
+    background-color: #dc3545; /* bg-danger */
+    border: none; /* Hilangkan border hijau agar tidak tabrakan dengan latar */
+    border-radius: 20px;
+    box-shadow: 0 6px 0 #8b0000; /* Shadow bawah tebal khas game */
+}
+
+/* Typography Utility */
+h1, h2, h3, p, span, li {
+    font-family: 'Jersey 25', sans-serif !important;
+}
+
+.pixel-btn {
+    border-radius: 10px;
+    box-shadow: 0 5px 0 #8b0000;
+    transition: all 0.2s ease-in-out;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.pixel-btn:hover {
+    transform: scale(1.05);
+    background-color: #ff4757;
+    color: white;
+}
+
+.pixel-btn:active {
+    transform: translateY(5px);
+    box-shadow: 0 0px 0 #8b0000;
+}
