@@ -1,0 +1,165 @@
+/* Mengatur background utama (Ganti URL dengan gambar langit/pohon milikmu) */
+/* [GANTI_GAMBAR_DI_SINI: Background utama langit dan rumput] */
+.game-bg {
+    background-image: url('https://via.placeholder.com/500x900'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center; /* Memastikan app ada di tengah jika dibuka di PC */
+}
+
+/* Container pembatas seperti layar HP */
+.app-container {
+    width: 100%;
+    max-width: 480px; 
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+/* Utility Colors & Buttons */
+.btn-brown { background-color: #8B4513; border: 2px solid #5C2E0B; }
+.btn-blue { background-color: #4A90E2; border: 2px solid #2C5A8E; }
+.text-shadow { text-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
+
+/* Hero Section */
+.hero-section {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+}
+.mascot-img {
+    position: absolute;
+    right: 10px;
+    bottom: -20px;
+    z-index: 2;
+}
+
+/* Main Board */
+.tab {
+    padding: 8px 20px;
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+    border: 2px solid #8B4513;
+    border-bottom: none;
+}
+.active-tab { background-color: #2E8B57; color: white; }
+.locked-tab { background-color: #D2B48C; color: #5C2E0B; }
+.progress-badge {
+    background-color: #F5E6D3;
+    color: #8B4513;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    border: 2px solid #8B4513;
+    font-size: 0.85rem;
+}
+
+/* Box Putih Utama */
+.content-box {
+    background-color: #FDF5E6;
+    border: 4px solid #8B4513;
+    border-radius: 0 15px 15px 15px;
+    padding: 20px;
+    position: relative;
+}
+
+/* Ribbon Title */
+.ribbon-title {
+    background-color: #2E8B57;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    display: inline-block;
+    border-radius: 5px;
+    position: relative;
+    left: -10px; /* Sedikit keluar dari box untuk efek pita */
+    box-shadow: 2px 2px 0px #1E5C3A;
+}
+.chest-icon {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+}
+
+/* Timeline System */
+.timeline-container {
+    position: relative;
+    padding-left: 50px; /* Memberi ruang untuk garis dan lingkaran */
+}
+.timeline-line {
+    position: absolute;
+    left: 19px; /* Posisi di tengah lingkaran */
+    top: 20px;
+    bottom: 0;
+    width: 4px;
+    background-color: #4A4A4A;
+    z-index: 1;
+}
+
+.module-item {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+/* Lingkaran Angka/Gembok */
+.node {
+    position: absolute;
+    left: -50px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    z-index: 2;
+    border: 3px solid;
+}
+.unlocked-node {
+    background-color: #90EE90;
+    border-color: #2E8B57;
+    color: #2E8B57;
+}
+.locked-node {
+    background-color: #E0E0E0;
+    border-color: #757575;
+    color: #757575;
+}
+
+/* Card Module */
+.module-card {
+    background-color: white;
+    border-radius: 10px;
+    border: 2px solid;
+}
+.unlocked-card {
+    border-color: #A3D9A5;
+    background-color: #E8F5E9;
+}
+.locked-card {
+    border-color: #D3D3D3;
+    background-color: #F5F5F5;
+}
+
+/* Ikon Play di Atas Gambar */
+.play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    background: white; /* Memberi latar belakang putih kecil di belakang tombol play merah */
+    border-radius: 50%;
+}
+
+.footer-box {
+    background-color: #FFF3E0;
+    border-top: 2px solid #E0E0E0;
+    padding-top: 15px;
+}

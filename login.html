@@ -41,9 +41,9 @@
         <div class="input-group-custom">
           <span class="icon-left">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-  <polyline points="22,6 12,13 2,6"/>
-</svg>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
           </span>
           <input type="email" id="username" name="username" class="form-input"
             placeholder="Email" autocomplete="email" required/>
@@ -110,6 +110,7 @@
     <span class="arrow-icon"><img src="assets/icons/arrow-login.png" width="18"></span>
     Back to Home
   </a>
+  
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -158,9 +159,9 @@
         });
         if (error) throw error;
 
-        if (document.getElementById('rememberMe').checked) {
-          localStorage.setItem('cs_remember', '1');
-        }
+        // if (document.getElementById('rememberMe').checked) {
+        //   localStorage.setItem('cs_remember', '1');
+        // }
         window.location.href = 'index.html'; // ← GANTI sesuai halaman tujuan
       } catch (err) {
         alert('Login failed: ' + err.message);
