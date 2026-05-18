@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code Saga – Modules</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="css/floor.css"/>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="btn-back">
+    <span class="btn-back-arrow">←</span> Back
+  </a>
+  <div class="profile-btn" id="profileBtn">
+    <div class="profile-avatar" id="avatarWrap">U</div>
+    <span id="profileName">Profile</span>
+    <span class="profile-caret">▾</span>
+    <div class="profile-dropdown" id="profileDropdown">
+      <a href="profile.html">👤 My Profile</a>
+      <a href="#" id="logoutBtn">🚪 Logout</a>
+    </div>
+  </div>
+</div>
+
+<div class="page-layout">
+
+  <div class="left-panel">
+
+    <div class="header-card">
+      <div class="header-top">
+        <div class="modules-icon-box">
+          📖
+        </div>
+        <div class="header-text-wrap">
+          <div class="modules-title">Modules</div>
+          <div class="modules-subtitle">
+            Learn step by step with video tutorials<br>
+            and become a coding hero!
+          </div>
+        </div>
+      </div>
+      <!-- <div class="mascot-wrap">
+        <span class="mascot-emoji">🦎</span>
+      </div> -->
+    </div>
+
+    <div class="floor-info-card">
+      <div class="floor-banner">
+        <span class="floor-banner-star">⭐</span>
+        <span id="floorBannerTitle">FLOOR 1: JAVA BASICS</span>
+      </div>
+      <div class="floor-banner-desc" id="floorBannerDesc">
+        Start your journey by learning the basic building blocks of Java programming.
+      </div>
+      <div class="chest-icon">🗝️</div>
+    </div>
+
+    <div class="bottom-hint" id="bottomHint">
+      💡 Complete all modules to unlock
+      <strong id="nextFloorName">Floor 2</strong>!
+      <span class="runner-emoji">🏃</span>
+    </div>
+
+  </div><div class="right-panel">
+
+    <div class="tabs-row">
+      <div class="floor-tabs" id="floorTabs"></div>
+      <div class="progress-pill">
+        Floor Progress
+        <span class="progress-star">⭐</span>
+        <span id="progressText">0 / 6</span>
+      </div>
+    </div>
+
+    <div class="module-scroll">
+      <div class="module-list" id="moduleList"></div>
+    </div>
+
+  </div></div><div class="modal-overlay" id="videoModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-video">
+      <iframe id="ytFrame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <div class="modal-xp">⭐ +<span id="modalXP">10</span> XP after watching</div>
+      <button class="btn-done" id="btnMarkDone">✅ Mark as Done &amp; Earn XP</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/pages/floor.js"></script>
+
+</body>
+</html>
