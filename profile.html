@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code Saga – Profile</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="css/profile.css"/>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap">
+  <div class="toast" id="toast"></div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <span class="confirm-icon" id="confirmIcon">⚠️</span>
+    <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+    <div class="confirm-msg" id="confirmMsg">This action cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">✕ Cancel</button>
+      <button class="btn-confirm-action" id="btnConfirmAction">✓ Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="top-bar">
+  <a href="floor.html" class="btn-back">← Back</a>
+  <div class="topbar-title">MY PROFILE</div>
+  <div class="topbar-xp">⭐ <span id="topbarXP">0</span> XP</div>
+</div>
+
+<div class="page-layout">
+
+  <div class="left-panel">
+
+    <div class="player-card">
+      <div class="avatar-display-wrap">
+        <div class="avatar-display" id="avatarDisplay">
+          <span class="avatar-display-placeholder">🧑</span>
+        </div>
+        <div class="level-badge" id="levelBadge">LV 1</div>
+      </div>
+      <div class="player-name" id="playerName">Loading...</div>
+      <div class="player-email" id="playerEmail">...</div>
+
+      <div class="xp-bar-section">
+        <div class="xp-bar-label">
+          <span>⭐ XP</span>
+          <span id="xpBarLabel">0 / 100</span>
+        </div>
+        <div class="xp-bar-track">
+          <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
+        </div>
+        <div class="xp-bar-hint">Keep going to level up! 🚀</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="stat-tile-icon">🏆</div>
+        <div class="stat-tile-num" id="statFloor">0</div>
+        <div class="stat-tile-label">Floors Done</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon">📚</div>
+        <div class="stat-tile-num" id="statModules">0</div>
+        <div class="stat-tile-label">Modules</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon">✅</div>
+        <div class="stat-tile-num" id="statQuiz">0</div>
+        <div class="stat-tile-label">Quiz Passed</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon">🔥</div>
+        <div class="stat-tile-num" id="statStreak">0</div>
+        <div class="stat-tile-label">Day Streak</div>
+      </div>
+    </div>
+
+    <div class="achievements-mini">
+      <div class="section-title-sm">🏅 Achievements</div>
+      <div class="badge-row" id="badgeRow">
+        <div class="badge-pill locked">🔒 First Win</div>
+        <div class="badge-pill locked">🔒 Streak 3</div>
+        <div class="badge-pill locked">🔒 Java Pro</div>
+      </div>
+    </div>
+
+  </div><div class="mid-panel">
+    <div class="avatar-picker-card">
+
+      <div class="picker-header">
+        <div class="picker-header-title">Choose Your Avatar</div>
+        <div class="picker-count" id="pickerCount">0 avatars</div>
+      </div>
+
+      <div class="avatar-cats" id="avatarCats">
+        </div>
+
+      <div class="avatar-grid-scroll">
+        <div class="avatar-grid" id="avatarGrid">
+          </div>
+      </div>
+
+      <button class="btn-select-avatar" id="btnSelectAvatar" onclick="applyAvatar()">
+        Use This Avatar
+      </button>
+
+    </div>
+  </div><div class="right-panel">
+
+    <div class="form-card">
+      <div class="form-card-header orange">
+        <div class="form-card-icon">✏️</div>
+        <div class="form-card-title">Edit Username</div>
+      </div>
+      <div class="form-card-body">
+        <div class="alert-box" id="usernameAlert"></div>
+        <div class="input-wrap">
+          <label class="input-label" for="inputUsername">
+            Username <span>(min. 3 characters)</span>
+          </label>
+          <input type="text" id="inputUsername" class="form-input" placeholder="Your username" maxlength="24"/>
+        </div>
+        <div class="input-wrap">
+          <label class="input-label">Email <span>(cannot be changed)</span></label>
+          <input type="email" id="inputEmail" class="form-input" readonly/>
+        </div>
+        <button class="btn-save orange" id="btnSaveUsername" onclick="saveUsername()">
+          Save Username
+        </button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-header green">
+        <div class="form-card-icon">🔐</div>
+        <div class="form-card-title">Change Password</div>
+      </div>
+      <div class="form-card-body">
+        <div class="alert-box" id="passwordAlert"></div>
+        <div class="input-wrap">
+          <label class="input-label" for="inputNewPw">New Password <span>(min. 6 characters)</span></label>
+          <div class="pw-wrap">
+            <input type="password" id="inputNewPw" class="form-input" placeholder="New password"
+                   oninput="checkStrength(this.value)"/>
+            <button class="pw-toggle" onclick="togglePw('inputNewPw',this)" type="button">👁</button>
+          </div>
+          <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwFill"></div></div>
+          <div class="pw-strength-label" id="pwLabel"></div>
+        </div>
+        <div class="input-wrap">
+          <label class="input-label" for="inputConfirmPw">Confirm New Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="inputConfirmPw" class="form-input" placeholder="Confirm password"/>
+            <button class="pw-toggle" onclick="togglePw('inputConfirmPw',this)" type="button">👁</button>
+          </div>
+        </div>
+        <button class="btn-save green" id="btnSavePassword" onclick="savePassword()">
+          Update Password
+        </button>
+      </div>
+    </div>
+
+    <div class="danger-card">
+      <div class="danger-header">
+        <span style="font-size:1.1rem;">⚠️</span>
+        <div class="danger-title">Danger Zone</div>
+      </div>
+      <div class="danger-desc">Logging out will end your current session. Your progress is safely saved.</div>
+      <button class="btn-danger" onclick="confirmLogout()">Logout from Account</button>
+    </div>
+
+  </div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/pages/profile.js"></script>
+
+</body>
+</html>
