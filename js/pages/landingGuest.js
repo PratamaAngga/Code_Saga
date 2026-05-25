@@ -38,12 +38,29 @@ document.addEventListener('DOMContentLoaded', () => {
             codeHeroText.style.opacity = '1';
         }, 1000);
     }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+ 
+  // ── Jika sudah login → langsung ke floor.html ──
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.replace('floor.html');
+      return;
+    }
+  } catch (e) {
+    console.warn('Session check error:', e.message);
+  }
+ 
+  // ── Tombol Register / Login ──
+  // landingGuest.html punya tombol dengan id="loginBtn"
+  const loginBtn = document.getElementById('loginBtn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+  }
+});
+ 
 });
 
-// 4. Logika untuk mencegah klik kanan (opsional, biar berasa kayak main game beneran)
-/*
-document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    console.log("Hey! No cheating in Code Saga!");
-});
-*/
