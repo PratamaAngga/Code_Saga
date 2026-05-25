@@ -1,104 +1,140 @@
 /* ============================================
-   SUPABASE INIT
-============================================ */
-const SUPABASE_URL  = 'https://ihwpxhqflghiblbfjonx.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlod3B4aHFmbGdoaWJsYmZqb254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzI3MTYsImV4cCI6MjA5Mjg0ODcxNn0.bk_CewautLlPWewjZCXQMKNY8zPF1wkPVZu-VNxOzpc';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-/* ============================================
-   FLOOR & MODULE DATA
-============================================ */
-const FLOORS = [
-  {
-    id:1, name:'Floor 1',
-    title:'FLOOR 1: JAVA BASICS',
-    desc:'Start your journey by learning the basic building blocks of Java programming.',
-    unlocked: true,
-    modules: [
-      { id:1,  num:'#1', name:'Introduction to Variables',   desc:'Learn what variables are, how to declare them, and store data in Java.',          videoId:'XzOwuNX3dIE', xp:10, type:'video' },
-      { id:2,  num:'#2', name:'Java Data Types',             desc:'Understand different data types in Java and when to use them.',                   videoId:'WPvGqX-TXP0', xp:10, type:'video' }, 
-      { id:3,  num:'#3', name:'Working with Variables',      desc:'Practice using variables in real code examples.',                                 videoId:'RYi-ZiWjnB8', xp:10, type:'video' }, 
-      { id:4,  num:'#4', name:'Type Casting',                desc:'Learn how to convert one data type into another.',                                videoId:'FaRqY5pMU_w', xp:10, type:'video' }, 
-      { id:5,  num:'#5', name:'Constants and Final Keyword', desc:'Learn about constants and how the final keyword works.',                          videoId:'UfEv1NFXZSU', xp:10, type:'video' }, 
-      { id:6,  num:'#6', name:'Practice Quiz',               desc:'Test your understanding with a fun quiz challenge!',                              videoId:null,          xp:20, type:'quiz'  },
-    ],
-  },
-  {
-    id:2, name:'Floor 2',
-    title:'FLOOR 2: CONTROL FLOW',
-    desc:'Master conditional statements and loops to control program flow.',
-    unlocked: false,
-    modules: [
-      { id:7,  num:'#1', name:'If-Else Statements',  desc:'Learn how to make decisions in your code.',         videoId:'BfVrEMmCqBI', xp:10, type:'video' }, 
-      { id:8,  num:'#2', name:'Switch Statements',   desc:'Use switch to handle multiple conditions cleanly.', videoId:'mA23x39DjbI', xp:10, type:'video' }, 
-      { id:9,  num:'#3', name:'For Loops',           desc:'Repeat code efficiently using for loops.',          videoId:'x7Xzvm0iLCI', xp:10, type:'video' }, 
-      { id:10, num:'#4', name:'While & Do-While',    desc:'Learn while and do-while loops.',                   videoId:'pTnmGWLnRKE', xp:10, type:'video' }, 
-      { id:11, num:'#5', name:'Break & Continue',    desc:'Control loop execution with break and continue.',   videoId:'QXa_6jPdL78', xp:10, type:'video' }, 
-      { id:12, num:'#6', name:'Practice Quiz',       desc:'Test your control flow knowledge!',                 videoId:null,          xp:20, type:'quiz'  },
-    ],
-  },
-  {
-    id:3, name:'Floor 3',
-    title:'FLOOR 3: METHODS & ARRAYS',
-    desc:'Write reusable code with methods and organize data with arrays.',
-    unlocked: false,
-    modules: [
-      { id:13, num:'#1', name:'Introduction to Methods', desc:'Define and call methods in Java.',              videoId:'pTuSP9Cg6tA', xp:10, type:'video' }, 
-      { id:14, num:'#2', name:'Method Parameters',       desc:'Pass data to methods and return results.',      videoId:'i6az_GkCPtg', xp:10, type:'video' }, 
-      { id:15, num:'#3', name:'Arrays Basics',           desc:'Store multiple values in a single variable.',   videoId:'eNPX2pTiaHI', xp:10, type:'video' }, 
-      { id:16, num:'#4', name:'Looping through Arrays',  desc:'Iterate over arrays using for-each loops.',     videoId:'K9kOmjkq-nA', xp:10, type:'video' }, 
-      { id:17, num:'#5', name:'2D Arrays',               desc:'Work with multi-dimensional arrays.',           videoId:'AEfBCfutJcM', xp:10, type:'video' }, 
-      { id:18, num:'#6', name:'Practice Quiz',           desc:'Apply your methods and arrays knowledge!',      videoId:null,          xp:20, type:'quiz'  },
-    ],
-  },
-];
-
-/* ============================================
    STATE
 ============================================ */
 let activeFloor      = 0;
 let currentUser      = null;
-let completedModules = new Set();
+let completedModules = new Set();   // Set of module DB ids
 let openMod          = null;
+let FLOORS           = [];          // diisi dari database
 
 /* ============================================
-   INIT — jalankan segera setelah DOM ready
+   INIT
 ============================================ */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Cek login
+  // — Auth guard —
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
   currentUser = session.user;
 
-  // Profile
+  // — Profile UI —
   const meta = currentUser.user_metadata || {};
   const name = meta.username || meta.full_name || currentUser.email.split('@')[0];
   document.getElementById('profileName').textContent = name;
+  const avatarWrap = document.getElementById('avatarWrap');
   if (meta.avatar_url) {
-    document.getElementById('avatarWrap').innerHTML =
+    avatarWrap.innerHTML =
       `<img src="${meta.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
   } else {
-    document.getElementById('avatarWrap').textContent = name.charAt(0).toUpperCase();
+    avatarWrap.textContent = name.charAt(0).toUpperCase();
   }
 
-  // Load progress
+  showLoading(true);
+
   try {
-    const { data } = await sb.from('user_progress')
-      .select('module_id').eq('user_id', currentUser.id).eq('completed', true);
-    if (data) data.forEach(r => completedModules.add(r.module_id));
-  } catch(e) { console.warn('Progress load:', e.message); }
-
-  // Unlock floors
-  FLOORS.forEach((f, i) => {
-    if (i === 0) return;
-    f.unlocked = FLOORS[i-1].modules.every(m => completedModules.has(m.id));
-  });
-
-  // Render
-  renderTabs();
-  renderFloor(0);
+    await loadFloorsFromDB();
+    await loadUserProgress();
+    computeUnlocks();
+    renderTabs();
+    renderFloor(0);
+  } catch (err) {
+    console.error('Init error:', err);
+    showError('Gagal memuat data. Silakan refresh halaman.');
+  } finally {
+    showLoading(false);
+  }
 });
+
+/* ============================================
+   LOAD FLOORS + ROOMS + MODULES DARI DB
+   Relasi: floors → rooms → modules
+============================================ */
+async function loadFloorsFromDB() {
+  // 1. Fetch semua floors
+  const { data: floorsData, error: floorErr } = await sb
+    .from('floors')
+    .select('*')
+    .order('order_index', { ascending: true });
+
+  if (floorErr) throw floorErr;
+  if (!floorsData?.length) throw new Error('Tidak ada data floor.');
+
+  // 2. Fetch semua rooms beserta modules-nya sekaligus (nested select)
+  const { data: roomsData, error: roomErr } = await sb
+    .from('rooms')
+    .select(`
+      id,
+      floor_id,
+      room_type,
+      title,
+      has_boss,
+      hp_limit,
+      order_index,
+      modules (
+        id,
+        room_id,
+        title,
+        description,
+        yt_url,
+        xp_reward,
+        module_type,
+        duration_mentions,
+        order_index
+      )
+    `)
+    .order('order_index', { ascending: true });
+
+  if (roomErr) throw roomErr;
+
+  // 3. Gabungkan: tiap floor → array rooms → flatten modules urut
+  FLOORS = floorsData.map((floor, idx) => {
+    const floorRooms = (roomsData || [])
+      .filter(r => r.floor_id === floor.id)
+      .sort((a, b) => a.order_index - b.order_index);
+
+    // Flatten semua modules dari semua rooms dalam floor ini,
+    // dengan urutan: room order_index dulu, lalu module order_index
+    const modules = floorRooms.flatMap(room =>
+      (room.modules || [])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(mod => ({
+          ...mod,
+          room_type: room.room_type,  // sertakan room_type agar bisa render quiz/boss
+        }))
+    );
+
+    return {
+      ...floor,
+      unlocked: idx === 0,
+      rooms: floorRooms,
+      modules,
+    };
+  });
+}
+
+/* ============================================
+   LOAD PROGRESS USER
+============================================ */
+async function loadUserProgress() {
+  const { data, error } = await sb
+    .from('user_module_progress')
+    .select('module_id')
+    .eq('user_id', currentUser.id)
+    .eq('completed', true);
+
+  if (error) { console.warn('Progress load warning:', error.message); return; }
+  completedModules = new Set((data || []).map(r => r.module_id));
+}
+
+/* ============================================
+   HITUNG UNLOCK FLOOR
+============================================ */
+function computeUnlocks() {
+  FLOORS.forEach((floor, i) => {
+    if (i === 0) { floor.unlocked = true; return; }
+    // Floor terbuka jika semua modul floor sebelumnya sudah selesai
+    floor.unlocked = FLOORS[i - 1].modules.every(m => completedModules.has(m.id));
+  });
+}
 
 /* ============================================
    RENDER TABS
@@ -107,15 +143,15 @@ function renderTabs() {
   const container = document.getElementById('floorTabs');
   container.innerHTML = '';
   FLOORS.forEach((floor, i) => {
+    const floorName = `Floor ${floor.floor_number}`;
     const btn = document.createElement('button');
     btn.className = `tab-btn${i === activeFloor ? ' active' : ''}${!floor.unlocked ? ' disabled' : ''}`;
     btn.disabled  = !floor.unlocked;
-    btn.innerHTML = floor.unlocked ? floor.name : `${floor.name} 🔒`;
-    btn.onclick = () => {
+    btn.innerHTML = floor.unlocked ? floorName : `${floorName} 🔒`;
+    btn.onclick   = () => {
       activeFloor = i;
-      document.querySelectorAll('.tab-btn').forEach((b,j) => {
-        b.classList.toggle('active', j === i);
-      });
+      document.querySelectorAll('.tab-btn').forEach((b, j) =>
+        b.classList.toggle('active', j === i));
       renderFloor(i);
     };
     container.appendChild(btn);
@@ -128,57 +164,78 @@ function renderTabs() {
 function renderFloor(idx) {
   const floor = FLOORS[idx];
 
-  // Left panel
+  // — Left panel —
   document.getElementById('floorBannerTitle').textContent = floor.title;
-  document.getElementById('floorBannerDesc').textContent  = floor.desc;
+  document.getElementById('floorBannerDesc').textContent  = floor.description;
 
-  // Progress
+  // — Progress —
   const done = floor.modules.filter(m => completedModules.has(m.id)).length;
   document.getElementById('progressText').textContent = `${done} / ${floor.modules.length}`;
 
-  // Bottom hint
+  // — Bottom hint —
   const next = FLOORS[idx + 1];
   const hint = document.getElementById('bottomHint');
-  if (next) {
-    hint.innerHTML = `💡 Complete all modules to unlock <strong>${next.name}</strong>! <span class="runner-emoji">🏃</span>`;
-  } else {
-    hint.innerHTML = `🏆 Congrats! You completed all floors!`;
-  }
+  hint.innerHTML = next
+    ? `💡 Complete all modules to unlock <strong>Floor ${next.floor_number}</strong>! <span class="runner-emoji">🏃</span>`
+    : `🏆 Congrats! You completed all floors!`;
 
-  // Module list
+  // — Module list —
   const list = document.getElementById('moduleList');
   list.innerHTML = '';
 
   floor.modules.forEach((mod, i) => {
     const isDone   = completedModules.has(mod.id);
-    const prevDone = i === 0 || completedModules.has(floor.modules[i-1].id);
+    const prevDone = i === 0 || completedModules.has(floor.modules[i - 1].id);
     const isActive = !isDone && prevDone && floor.unlocked;
     const isLocked = !isDone && !prevDone;
     const isLast   = i === floor.modules.length - 1;
 
-    // dot
     const dotCls   = isDone ? 'done' : isActive ? 'active' : 'locked';
-    const dotLabel = isDone ? '✓' : isActive ? (i+1) : '🔒';
+    const dotLabel = isDone ? '✓'   : isActive ? (i + 1)  : '🔒';
 
-    // thumb
-    const thumbHTML = mod.type === 'quiz'
-      ? `<div class="thumb" style="background:#1565C0;font-size:2rem;">📝</div>`
-      : `<div class="thumb">
-           <img src="https://img.youtube.com/vi/${mod.videoId}/mqdefault.jpg" alt=""
-                onerror="this.style.display='none'">
-           <div class="thumb-overlay">
-             <svg viewBox="0 0 24 24">
-               <circle cx="12" cy="12" r="12" fill="white" opacity=".88"/>
-               <polygon points="10,8 17,12 10,16" fill="#FF0000"/>
-             </svg>
-           </div>
-         </div>`;
+    // Tentukan tipe dari module_type atau room_type
+    const isQuiz = mod.module_type === 'quiz' || mod.room_type === 'quiz';
+    const isBoss = mod.room_type === 'boss';
+    const isQuizBattle = mod.module_type === 'quiz_battle';
 
-    // right
-    let rightHTML = '';
-    if (isDone)        rightHTML = `<div class="done-badge">✅ Done</div>`;
-    else if (isActive) rightHTML = `<button class="watch-btn" data-mod-id="${mod.id}">▶ Watch Now</button>`;
-    else               rightHTML = `<span class="lock-ico">🔒</span>`;
+    // — Thumbnail —
+    let thumbHTML;
+if (isBoss) {
+  thumbHTML = `<div class="thumb" style="background:#b71c1c;font-size:2rem;">👾</div>`;
+} else if (isQuizBattle) {
+  thumbHTML = `<div class="thumb" style="background:linear-gradient(135deg,#6a1b9a,#ad1457);font-size:2rem;">⚔️</div>`;
+} else if (isQuiz) {
+  thumbHTML = `<div class="thumb" style="background:#1565C0;font-size:2rem;">📝</div>`;
+} else {
+      thumbHTML = `
+        <div class="thumb">
+          <img src="https://img.youtube.com/vi/${mod.yt_url}/mqdefault.jpg" alt=""
+               onerror="this.style.display='none'">
+          <div class="thumb-overlay">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="12" fill="white" opacity=".88"/>
+              <polygon points="10,8 17,12 10,16" fill="#FF0000"/>
+            </svg>
+          </div>
+        </div>`;
+    }
+
+    // — Right action —
+    // — Right action —
+let rightHTML = '';
+if (isDone) {
+  rightHTML = `<div class="done-badge">✅ Done</div>`;
+} else if (isActive) {
+  if (mod.module_type === 'quiz_battle') {
+    rightHTML = `<button class="watch-btn" style="background:linear-gradient(135deg,#6a1b9a,#ad1457);box-shadow:0 3px 0 #4a148c;" data-mod-id="${mod.id}">⚔️ Start Quiz</button>`;
+  } else if (mod.module_type === 'quiz') {
+    rightHTML = `<button class="watch-btn" data-mod-id="${mod.id}">📝 Start Practice</button>`;
+  } else {
+    rightHTML = `<button class="watch-btn" data-mod-id="${mod.id}">▶ Watch Now</button>`;
+  }
+} else {
+  rightHTML = `<span class="lock-ico">🔒</span>`;
+}
 
     const row = document.createElement('div');
     row.className = 'module-row';
@@ -188,18 +245,17 @@ function renderFloor(idx) {
         <div class="tl-line ${isDone ? 'done' : ''} ${isLast ? 'hidden' : ''}"></div>
       </div>
       <div class="module-card ${isLocked ? 'locked' : ''} ${isActive ? 'card-active' : ''} ${isDone ? 'card-done' : ''}"
-           style="animation-delay:${i * .05}s">
+           style="animation-delay:${i * 0.05}s">
         ${thumbHTML}
         <div class="card-info">
-          <div class="card-num">${mod.num}</div>
-          <div class="card-name">${mod.name}</div>
-          <div class="card-desc">${mod.desc}</div>
-          <div class="card-xp">⭐ +${mod.xp} XP</div>
+          <div class="card-num">#${i + 1}</div>
+          <div class="card-name">${mod.title}</div>
+          <div class="card-desc">${mod.description || ''}</div>
+          <div class="card-xp">⭐ +${mod.xp_reward ?? 10} XP</div>
         </div>
         <div class="card-right">${rightHTML}</div>
       </div>`;
 
-    // events
     row.querySelector('.module-card').addEventListener('click', () => {
       if (isLocked) return;
       openModal(mod);
@@ -215,10 +271,19 @@ function renderFloor(idx) {
    MODAL
 ============================================ */
 function openModal(mod) {
+    if (mod.module_type === 'quiz') {
+    window.location.href = `practice.html?floor=${FLOORS[activeFloor].floor_number}`;
+    return;
+  }
+
+  if (mod.module_type === 'quiz_battle') {
+    window.location.href = `quiz.html?floor=${FLOORS[activeFloor].floor_number}`;
+    return;
+  }
   openMod = mod;
-  document.getElementById('modalTitle').textContent = mod.name;
-  document.getElementById('modalDesc').textContent  = mod.desc;
-  document.getElementById('modalXP').textContent    = mod.xp;
+  document.getElementById('modalTitle').textContent = mod.title;
+  document.getElementById('modalDesc').textContent  = mod.description || '';
+  document.getElementById('modalXP').textContent    = mod.xp_reward ?? 10;
 
   const isDone = completedModules.has(mod.id);
   const btn = document.getElementById('btnMarkDone');
@@ -226,11 +291,9 @@ function openModal(mod) {
   btn.textContent = isDone ? '✅ Already Completed!' : '✅ Mark as Done & Earn XP';
 
   const frame = document.getElementById('ytFrame');
-  if (mod.videoId) {
-    frame.src = `https://www.youtube.com/embed/${mod.videoId}?autoplay=1&rel=0`;
-  } else {
-    frame.src = '';
-  }
+  frame.src = mod.yt_url
+    ? `https://www.youtube.com/embed/${mod.yt_url}?autoplay=1&rel=0`
+    : '';
 
   document.getElementById('videoModal').classList.add('open');
 }
@@ -251,38 +314,39 @@ document.getElementById('videoModal').addEventListener('click', e => {
 ============================================ */
 document.getElementById('btnMarkDone').addEventListener('click', async () => {
   if (!openMod || completedModules.has(openMod.id)) return;
+
   const btn = document.getElementById('btnMarkDone');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
 
   try {
-    const { error } = await sb.from('user_progress').upsert({
+    const { error } = await sb.from('user_module_progress').insert({
       user_id:      currentUser.id,
       module_id:    openMod.id,
-      floor_id:     FLOORS[activeFloor].id,
       completed:    true,
       completed_at: new Date().toISOString(),
     });
     if (error) throw error;
 
-    // XP (opsional — skip jika RPC belum dibuat)
-    await sb.rpc('add_xp', { p_user_id: currentUser.id, p_xp: openMod.xp }).catch(() => {});
+    // Tambah XP (silent fail jika function belum ada)
+    try {
+      await sb.rpc('add_xp', { p_user_id: currentUser.id, p_xp: openMod.xp_reward ?? 10 });
+    } catch (_) {}
 
     completedModules.add(openMod.id);
     btn.textContent = '✅ XP Earned!';
 
     setTimeout(() => {
       closeModal();
-      FLOORS.forEach((f, i) => {
-        if (i === 0) return;
-        f.unlocked = FLOORS[i-1].modules.every(m => completedModules.has(m.id));
-      });
+      computeUnlocks();
       renderTabs();
       renderFloor(activeFloor);
     }, 800);
-  } catch(err) {
-    btn.disabled = false;
+
+  } catch (err) {
+    btn.disabled    = false;
     btn.textContent = '✅ Mark as Done & Earn XP';
-    alert('Gagal: ' + err.message);
+    alert('Gagal menyimpan: ' + err.message);
   }
 });
 
@@ -301,3 +365,26 @@ document.getElementById('logoutBtn').addEventListener('click', async e => {
   await sb.auth.signOut();
   window.location.href = 'login.html';
 });
+
+/* ============================================
+   HELPERS
+============================================ */
+function showLoading(show) {
+  let el = document.getElementById('loadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;' +
+      'align-items:center;justify-content:center;z-index:9999;color:#fff;font-size:1.3rem;';
+    el.innerHTML = '⏳ Loading…';
+    document.body.appendChild(el);
+  }
+  el.style.display = show ? 'flex' : 'none';
+}
+
+function showError(msg) {
+  const list = document.getElementById('moduleList');
+  if (list) list.innerHTML =
+    `<div style="text-align:center;padding:2rem;color:#c62828;">${msg}</div>`;
+}

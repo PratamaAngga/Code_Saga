@@ -351,3 +351,95 @@
             border-top: 4px solid #880E4F;
             margin-top: 50px; /* Kasih jarak dari frame */
         }
+
+
+        
+        /* Pastikan container profile relative agar dropdown nempel */
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Style Dropdown mengikuti tema CodeSaga */
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 200px;
+            background-color: #E8E8E8; /* Warna abu-abu kartu kamu */
+            border: 4px solid var(--border-dark); /* Border cokelat tua */
+            border-radius: 15px;
+            box-shadow: 0 6px 0 var(--border-dark); /* Efek bayangan pixel */
+            display: none;
+            flex-direction: column;
+            padding: 10px;
+            z-index: 999;
+        }
+
+        .profile-dropdown.active {
+            display: flex;
+            animation: dropdownFade 0.2s ease-out;
+        }
+
+        .profile-dropdown a, 
+        .profile-dropdown button {
+            font-family: var(--pixel-font);
+            font-size: 1.2rem;
+            color: var(--border-dark);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .profile-dropdown a:hover, 
+        .profile-dropdown button:hover {
+            background-color: var(--accent-red);
+            color: white;
+        }
+
+        .profile-dropdown hr {
+            border: none;
+            border-top: 2px solid var(--border-dark);
+            margin: 8px 0;
+        }
+
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-container {
+            position: relative; /* Wajib agar dropdown nempel di sini */
+            cursor: pointer;
+            z-index: 1001; /* Lebih tinggi dari elemen header lainnya */
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%; /* Pas di bawah container */
+            right: 0;
+            width: 180px;
+            background-color: #E8E8E8;
+            border: 4px solid var(--border-dark);
+            border-radius: 12px;
+            display: none; /* Default sembunyi */
+            flex-direction: column;
+            padding: 8px;
+            z-index: 9999; /* Sangat tinggi agar di atas segalanya */
+            box-shadow: 0 6px 0 var(--border-dark);
+        }
+
+        /* Pastikan class active ini ada */
+        .profile-dropdown.active {
+            display: flex !important; 
+        }

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code Saga – Practice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="css/practice.css"/>
+</head>
+<body>
+
+<div class="top-bar">
+    <a href="floor.html" class="btn-back-module">← Modul</a>
+  <div class="floor-pill">⭐ <span id="topFloorLabel">Floor 1: Java Basics</span></div>
+
+  <div class="progress-center">
+    <div class="progress-label">Overall Progress</div>
+    <div class="bar-track">
+      <div class="bar-fill" id="barFill" style="width:0%"></div>
+    </div>
+    <div class="progress-star-badge">⭐ <span id="progCount">0 / 6</span></div>
+  </div>
+
+  <div class="topbar-legend">
+    <div class="legend-item" style="color:#66BB6A;">
+      <div class="legend-dot benar"></div> Benar
+    </div>
+    <div class="legend-item" style="color:#EF5350;">
+      <div class="legend-dot salah"></div> Salah
+    </div>
+    <div class="legend-item" style="color:rgba(255,255,255,.5);">🔒 Terkunci</div>
+  </div>
+</div>
+
+<div class="page-layout">
+
+  <div class="sidebar">
+
+    <div class="q-tabs-card">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.4rem;color:var(--brown);margin-bottom:8px;">📋 SOAL</div>
+      <div class="q-tabs-row" id="qTabsRow">
+        </div>
+    </div>
+
+    <div class="diff-legend">
+      <div class="diff-legend-title">📊 LEVEL</div>
+      <div class="diff-row"><div class="diff-dot easy"></div> Basic (#1–2)</div>
+      <div class="diff-row"><div class="diff-dot medium"></div> Medium (#3–4)</div>
+      <div class="diff-row"><div class="diff-dot hard"></div> Advanced (#5–6)</div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-label">💡 Tips!</div>
+      <div class="tip-text" id="tipText">Baca soal dengan teliti sebelum menjawab!</div>
+      <div class="tip-char">🧑‍💻</div>
+    </div>
+
+  </div><div class="main-panel">
+    <div class="q-card">
+
+      <div class="q-card-header">
+        <div class="q-num-label" id="qNumLabel">Pertanyaan 1</div>
+        <div class="diff-badge easy" id="diffBadge">🌱 Basic</div>
+      </div>
+
+      <div class="q-card-body" id="qCardBody">
+        <div class="question-text" id="questionText">Loading...</div>
+        <div class="code-block" id="codeBlock" style="display:none;"></div>
+        <div class="options-list" id="optsList"></div>
+
+        <button class="btn-verify" id="btnVerify" disabled onclick="verify()">
+          ✓ Verifikasi Jawaban
+        </button>
+
+        <div class="feedback-box" id="feedbackBox">
+          <div class="fb-char" id="fbChar">🎉</div>
+          <div class="fb-content">
+            <div class="fb-title" id="fbTitle">Jawaban Benar!</div>
+            <div class="fb-sub"  id="fbSub">Hebat! Jawabanmu benar 🎉</div>
+            <div class="fb-xp"   id="fbXP">⭐ +10 XP</div>
+          </div>
+          <button class="btn-show-exp" id="btnShowExp"
+                  style="display:none;" onclick="toggleExp()">
+            📖 Lihat Pembahasan
+          </button>
+        </div>
+
+        <div class="explanation-box" id="expBox">
+          <div class="exp-title">📖 Pembahasan:</div>
+          <div class="exp-text" id="expText"></div>
+          <div class="exp-code" id="expCode" style="display:none;"></div>
+          <div class="exp-tip-box" id="expTipBox" style="display:none;">
+            <div class="exp-tip-label">💡 Tips!</div>
+            <div class="exp-tip-text" id="expTipText"></div>
+            <div class="exp-tip-char">🧑‍💻</div>
+          </div>
+          <button class="btn-close-exp" onclick="toggleExp()">✕ Tutup Pembahasan</button>
+        </div>
+      </div><div class="q-card-footer">
+        <button class="btn-nav" id="btnPrev" disabled onclick="nav(-1)">← Sebelumnya</button>
+        <button class="btn-go-quiz" id="btnGoQuiz" onclick="goQuiz()">⚔️ Mulai Quiz →</button>
+        <button class="btn-nav" id="btnNext" onclick="nav(1)">Selanjutnya →</button>
+      </div>
+
+    </div></div></div><div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-trophy">🏆</span>
+      <div class="modal-title">PRACTICE SELESAI!</div>
+      <div class="modal-sub" id="modalSub">Kamu siap untuk Quiz!</div>
+    </div>
+    <div class="modal-scores">
+      <div class="ms-item">
+        <div class="ms-num c" id="msCorrect">0</div>
+        <div class="ms-label">Benar ✅</div>
+      </div>
+      <div class="ms-div"></div>
+      <div class="ms-item">
+        <div class="ms-num w" id="msWrong">0</div>
+        <div class="ms-label">Salah ❌</div>
+      </div>
+      <div class="ms-div"></div>
+      <div class="ms-item">
+        <div class="ms-num x" id="msXP">0</div>
+        <div class="ms-label">XP Earned ⭐</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-retry" onclick="retry()">🔁 Ulangi</button>
+      <button class="btn-start-quiz" onclick="goQuiz()">⚔️ Lanjut ke Quiz!</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/pages/practice.js"></script>
+
+</body>
+</html>
