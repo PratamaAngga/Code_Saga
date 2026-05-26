@@ -10,9 +10,8 @@ window.addEventListener('load', async () => {
 
     await loadCurrentFloor();
 
-      await loadTotalXP();
+    await loadTotalXP();
 
-    
     await loadAchievementProgress();
 
 });
@@ -31,7 +30,7 @@ async function loadOverallProgress() {
 
         if (!user) return;
 
-        // ambil module yang selesai
+        // Ambil modul yang selesai
         const { data, error } = await sb
             .from('user_module_progress')
             .select('module_id')
@@ -49,14 +48,14 @@ async function loadOverallProgress() {
 
         }
 
-        // total semua module game
+        // Total semua module game
         const TOTAL_MODULES = 42;
 
-        // jumlah selesai
+        // Jumlah selesai
         const completedCount =
             data ? data.length : 0;
 
-        // hitung persen
+        // Hitung persen
         const targetPercent =
             Math.round(
                 (completedCount / TOTAL_MODULES) * 100
@@ -168,7 +167,7 @@ async function loadUserProfile() {
 
         if (!user) return;
 
-        // ambil username
+        // Ambil username
         const { data, error } = await sb
             .from('users')
             .select('username')
@@ -186,13 +185,13 @@ async function loadUserProfile() {
 
         }
 
-        // tampilkan username
+        // Tampilkan username
         document
             .getElementById('profileName')
             .textContent =
             data.username;
 
-        // ambil avatar dari metadata
+        // Ambil avatar dari metadata
         const avatarId =
             user.user_metadata?.avatar_id;
 
@@ -201,13 +200,13 @@ async function loadUserProfile() {
             avatarId
         );
 
-        // cari avatar
+        // Cari avatar
         const avatar =
             window.AVATARS.find(
                 a => a.id === avatarId
             );
 
-        // tampilkan avatar
+        // Tampilkan avatar
         if (avatar) {
 
             document
@@ -242,7 +241,7 @@ async function loadCurrentFloor() {
 
         if (!user) return;
 
-        // ambil floor terakhir user
+        // Ambil floor terakhir user
         const { data: progress, error } = await sb
             .from('user_floor_progress')
             .select(`
@@ -256,24 +255,24 @@ async function loadCurrentFloor() {
                 ascending: false
             })
             .limit(1)
-            .single();
+            .maybeSingle(); // Menggunakan maybeSingle agar aman jika data masih kosong
 
-        if (error) {
+        if (error || !progress) {
 
-            console.error(
-                'Floor progress error:',
-                error
+            console.warn(
+                'Floor progress masih kosong atau error:',
+                error?.message
             );
 
             return;
 
         }
 
-        // ambil nomor floor
+        // Ambil nomor floor
         const floorNumber =
             progress.floors.floor_number;
 
-        // tampilkan ke card
+        // Tampilkan ke card
         document.getElementById(
             'currentFloorText'
         ).textContent =
@@ -304,7 +303,7 @@ async function loadTotalXP() {
 
         if (!user) return;
 
-        // ambil total_exp dari tabel users
+        // Ambil total_exp dari tabel users
         const { data, error } = await sb
             .from('users')
             .select('total_exp')
@@ -322,7 +321,7 @@ async function loadTotalXP() {
 
         }
 
-        // tampilkan XP
+        // Tampilkan XP
         document.getElementById(
             'totalXPText'
         ).innerHTML =
@@ -353,55 +352,84 @@ async function loadAchievementProgress() {
 
         if (!user) return;
 
-        const { data, error } = await sb
+        // 1. Ambil jumlah module yang diselesaikan user
+        const { data: modulesData, error: modulesError } = await sb
             .from('user_module_progress')
             .select('module_id')
             .eq('user_id', user.id)
             .eq('completed', true);
 
-        if (error) {
+        if (modulesError) {
 
-            console.error(error);
+            console.error('Gagal mengambil progress modul:', modulesError.message);
             return;
 
         }
 
         const TOTAL_MODULES = 42;
+        const completed = modulesData ? modulesData.length : 0;
+        const percent = Math.round((completed / TOTAL_MODULES) * 100);
 
-        const completed =
-            data.length;
-
-        const percent =
-            Math.round(
-                (completed / TOTAL_MODULES) * 100
-            );
-
-        // text
-        document.getElementById(
-            'achievementProgressText'
-        ).textContent =
+        // Render teks progres modul
+        document.getElementById('achievementProgressText').textContent =
             `${completed} / ${TOTAL_MODULES} Modules`;
 
-        // bar
-        document.getElementById(
-            'achievementProgressFill'
-        ).style.width =
+        // Render lebar progress bar
+        document.getElementById('achievementProgressFill').style.width =
             percent + '%';
 
-        // status
-        const status =
-            document.getElementById(
-                'achievementStatus'
-            );
+        // 2. [IDEMU!] Cek status pertempuran Boss di Room ID 15 di tabel user_floor_progress
+        const { data: bossProgress, error: bossError } = await sb
+            .from('user_floor_progress')
+            .select('score, status')
+            .eq('user_id', user.id)
+            .eq('current_room_id', 15) // Target spesifik Room ID 15 sesuai usulanmu
+            .maybeSingle(); // Menggunakan maybeSingle agar tidak throw error jika data kosong
 
-        if (completed >= TOTAL_MODULES) {
+        if (bossError) {
+            console.warn('Gagal memverifikasi status boss:', bossError.message);
+        }
 
+        // 3. Evaluasi Syarat Kelulusan Achievement
+        // Syarat A: Semua 42 modul harus selesai
+        const isAllModulesDone = completed >= TOTAL_MODULES;
+
+        // Syarat B: Boss Room 15 berstatus 'completed' dan skor >= 75
+        const isBossDefeated = bossProgress && 
+                               bossProgress.status === 'completed' && 
+                               (bossProgress.score >= 75);
+
+        // Keduanya wajib terpenuhi untuk membuka lencana
+        const isUnlocked = isAllModulesDone && isBossDefeated;
+
+        const status = document.getElementById('achievementStatus');
+        const badgeImg = document.querySelector('.achievement-badge-img');
+
+        if (isUnlocked) {
+
+            // JIKA UNLOCKED:
             status.classList.remove('locked');
-
             status.classList.add('unlocked');
+            status.innerHTML = '🏆 Achievement Unlocked';
 
-            status.innerHTML =
-                '🏆 Achievement Unlocked';
+            // Kembalikan gambar ke warna aslinya (filter grayscale dinonaktifkan)
+            if (badgeImg) {
+                badgeImg.style.filter = 'none';
+                badgeImg.style.opacity = '1';
+            }
+
+        } else {
+
+            // JIKA LOCKED:
+            status.classList.remove('unlocked');
+            status.classList.add('locked');
+            status.innerHTML = '🔒 Locked Achievement';
+
+            // Ubah gambar menjadi abu-abu (grayscale) dan sedikit transparan
+            if (badgeImg) {
+                badgeImg.style.filter = 'grayscale(100%)';
+                badgeImg.style.opacity = '0.5';
+            }
 
         }
 
