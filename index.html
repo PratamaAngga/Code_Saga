@@ -4,96 +4,243 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Code Saga</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+
+  <!-- Font -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+    rel="stylesheet"
+  />
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      background: url('assets/images/bg-floor.png') center/cover no-repeat;
-      background-color: #2d5a1b;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        url('assets/images/bg-floor.png')
+        center / cover
+        no-repeat;
+
+      background-color: #2d5a1b;
+
+      overflow: hidden;
+    }
+
     body::before {
       content: '';
-      position: fixed; inset: 0;
-      background: rgba(5,20,2,.5);
+
+      position: fixed;
+      inset: 0;
+
+      background: rgba(5, 20, 2, 0.5);
+
       pointer-events: none;
     }
+
     .splash {
-      position: relative; z-index: 1;
+      position: relative;
+      z-index: 2;
+
       text-align: center;
-      animation: fadeIn .4s ease both;
+
+      animation: fadeIn 0.4s ease both;
     }
-    .splash img { height: 70px; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto; }
-    /* fallback jika logo belum ada */
+
+    .splash img {
+      height: 80px;
+
+      margin-bottom: 30px;
+
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     .splash-text {
+      display: none;
+
       font-family: 'Press Start 2P', monospace;
-      font-size: 1.2rem; color: #FFC107;
-      text-shadow: 2px 2px 0 #3E2723;
-      margin-bottom: 24px;
+      font-size: 1.3rem;
+
+      color: #ffc107;
+
+      text-shadow: 3px 3px 0 #3e2723;
+
+      margin-bottom: 30px;
     }
-    .dots { display: flex; justify-content: center; gap: 8px; }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
     .dot {
-      width: 12px; height: 12px;
-      background: #FFC107; border-radius: 50%;
-      animation: bounce .8s ease infinite;
+      width: 14px;
+      height: 14px;
+
+      background: #ffc107;
+
+      border-radius: 50%;
+
+      animation: bounce 0.8s ease infinite;
     }
-    .dot:nth-child(2) { animation-delay:.18s; }
-    .dot:nth-child(3) { animation-delay:.36s; }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.36s;
+    }
+
     @keyframes bounce {
-      0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)}
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-12px);
+      }
     }
+
     @keyframes fadeIn {
-      from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)}
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   </style>
 </head>
+
 <body>
+
   <div class="splash">
-    <!-- Coba tampilkan logo, fallback ke teks -->
-    <img src="assets/images/logo.png" alt="Code Saga"
-         onerror="this.style.display='none'; document.querySelector('.splash-text').style.display='block'">
-    <div class="splash-text" style="display:none;">Code Saga</div>
+
+    <!-- Logo -->
+    <img
+      src="assets/images/logo.png"
+      alt="Code Saga"
+
+      onerror="
+        this.style.display='none';
+        document.querySelector('.splash-text').style.display='block';
+      "
+    />
+
+    <!-- fallback text -->
+    <div class="splash-text">
+      Code Saga
+    </div>
+
+    <!-- loading -->
     <div class="dots">
       <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>
     </div>
+
   </div>
 
+  <!-- SUPABASE CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- SUPABASE CONFIG -->
   <script src="js/config/supabase.js"></script>
+
   <script>
+
     /**
-     * index.html — REDIRECT HUB
-     * Belum login  → landingGuest.html
-     * Sudah login  → floor.html
-     *
-     * Semua halaman protected redirect ke sini jika session hilang
-     * (via auth.guard.js yang menyimpan cs_after_login di sessionStorage)
+     * INDEX REDIRECT
+     * -------------------------
+     * Sudah login  -> landingUser.html
+     * Belum login  -> landingGuest.html
      */
-    (async () => {
+
+    async function checkSession() {
+
       try {
-        const { data: { session } } = await sb.auth.getSession();
 
-        if (session) {
-          // Cek apakah ada halaman yang ingin dikunjungi sebelumnya
-          const savedUrl = sessionStorage.getItem('cs_after_login');
-          sessionStorage.removeItem('cs_after_login');
+        const {
+          data: { session },
+          error
+        } = await sb.auth.getSession();
 
-          if (savedUrl && !savedUrl.includes('login.html') && !savedUrl.includes('index.html')) {
-            window.location.replace(savedUrl);
-          } else {
-            window.location.replace('floor.html');
-          }
-        } else {
-          window.location.replace('landingGuest.html');
+        if (error) {
+          throw error;
         }
+
+        // delay kecil supaya splash terlihat
+        setTimeout(() => {
+
+          if (session) {
+
+            // kalau sebelumnya ada halaman tujuan
+            const savedUrl =
+              sessionStorage.getItem('cs_after_login');
+
+            sessionStorage.removeItem('cs_after_login');
+
+            if (
+              savedUrl &&
+              !savedUrl.includes('login.html') &&
+              !savedUrl.includes('index.html')
+            ) {
+
+              window.location.href = savedUrl;
+
+            } else {
+
+              // user sudah login
+              window.location.href = 'landingUser.html';
+
+            }
+
+          } else {
+
+            // user belum login
+            window.location.href = 'landingGuest.html';
+
+          }
+
+        }, 1200);
+
       } catch (err) {
-        console.error('index redirect error:', err);
-        window.location.replace('landingGuest.html');
+
+        console.error(
+          'Session check failed:',
+          err
+        );
+
+        // fallback
+        window.location.href = 'landingGuest.html';
+
       }
-    })();
+
+    }
+
+    checkSession();
+
   </script>
+
 </body>
 </html>
