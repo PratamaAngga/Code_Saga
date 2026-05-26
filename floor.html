@@ -61,7 +61,16 @@
 
     <div class="bottom-hint" id="bottomHint">
       💡 Complete all modules to unlock
-      <strong id="nextFloorName">Floor 2</strong>!
+      <div
+    id="currentFloorText"
+    style="
+        font-family: var(--pixel-font);
+        font-size: 40px;
+        margin-top: 5px;
+    "
+>
+    Floor 1
+</div>
       <span class="runner-emoji">🏃</span>
     </div>
 
@@ -97,6 +106,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config/supabase.js"></script>  <!-- tambah ini -->
+<script src="js/data/avatars.js"></script>
 <script src="js/pages/floor.js"></script>
 
 

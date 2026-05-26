@@ -20,12 +20,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   const meta = currentUser.user_metadata || {};
   const name = meta.username || meta.full_name || currentUser.email.split("@")[0];
   document.getElementById("profileName").textContent = name;
-  const avatarWrap = document.getElementById("avatarWrap");
-  if (meta.avatar_url) {
-    avatarWrap.innerHTML = `<img src="${meta.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-  } else {
-    avatarWrap.textContent = name.charAt(0).toUpperCase();
-  }
+  const avatarWrap =
+    document.getElementById("avatarWrap");
+
+const avatarId =
+    meta.avatar_id;
+
+const avatar =
+    window.AVATARS.find(
+        a => a.id === avatarId
+    );
+
+if (avatar) {
+
+    avatarWrap.innerHTML = `   <img
+            src="${avatar.src}"
+            style="
+                width:100%;
+                height:100%;
+                border-radius:50%;
+                object-fit:cover;
+            "
+        >
+    `;
+
+} else {
+
+    avatarWrap.textContent =
+        name.charAt(0).toUpperCase();
+
+}
 
   showLoading(true);
 
