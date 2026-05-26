@@ -77,32 +77,91 @@ document.addEventListener('DOMContentLoaded', async () => {
    LOAD PROFILE
 ================================================ */
 async function loadProfile() {
+
+  // ambil data user dari tabel users
+  const { data: userData, error } = await sb
+    .from('users')
+    .select('username, total_exp')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
   const meta = currentUser.user_metadata || {};
-  const name = meta.username || meta.full_name || currentUser.email.split('@')[0];
 
-  document.getElementById('playerName').textContent  = name;
-  document.getElementById('playerEmail').textContent = currentUser.email;
-  document.getElementById('inputUsername').value     = name;
-  document.getElementById('inputEmail').value        = currentUser.email;
+  // username
+  const name =
+    userData.username ||
+    meta.username ||
+    currentUser.email.split('@')[0];
 
-  // XP & Level
-  let xp = meta.xp || 0;
-  let level = Math.floor(xp / 100) + 1;
-  let xpProgress = xp % 100;
-  document.getElementById('topbarXP').textContent    = xp;
-  document.getElementById('levelBadge').textContent  = 'LV ' + level;
-  document.getElementById('xpBarLabel').textContent  = `${xpProgress} / 100`;
-  document.getElementById('xpBarFill').style.width   = xpProgress + '%';
+  document.getElementById('playerName').textContent = name;
 
-  // Avatar
-  const savedAvatarId = meta.avatar_id || null;
+  // email
+  document.getElementById('playerEmail').textContent =
+    currentUser.email;
+
+  document.getElementById('inputUsername').value =
+    name;
+
+  document.getElementById('inputEmail').value =
+    currentUser.email;
+
+  // ============================================
+// XP & LEVEL
+// ============================================
+
+const xp = userData.total_exp || 0;
+
+// max xp progress bar
+const MAX_XP = 2000;
+
+// level tiap 200 xp
+const level =
+  Math.floor(xp / 200) + 1;
+
+// persen progress bar
+const xpPercent =
+  Math.min((xp / MAX_XP) * 100, 100);
+
+// tampilkan xp atas
+document.getElementById('topbarXP').textContent =
+  xp;
+
+// badge level
+document.getElementById('levelBadge').textContent =
+  'LV ' + level;
+
+// tulisan progress
+document.getElementById('xpBarLabel').textContent =
+  `${xp} / ${MAX_XP}`;
+
+// isi progress bar
+document.getElementById('xpBarFill').style.width =
+  xpPercent + '%';
+
+  // ============================================
+  // AVATAR
+  // ============================================
+
+  const savedAvatarId =
+    meta.avatar_id || null;
+
   if (savedAvatarId) {
+
     selectedAvatar = savedAvatarId;
-    const av = AVATARS.find(a => a.id === savedAvatarId);
-    if (av) setAvatarDisplay(av);
+
+    const av =
+      AVATARS.find(a => a.id === savedAvatarId);
+
+    if (av) {
+      setAvatarDisplay(av);
+    }
   }
 }
-
 /* ================================================
    LOAD STATS FROM SUPABASE
 ================================================ */
