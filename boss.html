@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code Saga – Boss Fight</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="css/quiz.css"/>
+  <link rel="stylesheet" href="css/boss.css"/>
+</head>
+<body>
+
+<!-- Overlay merah saat jawaban salah -->
+<div class="damage-overlay" id="damageOverlay"></div>
+
+<!-- Confetti saat menang -->
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<!-- Toast feedback -->
+<div class="feedback-toast" id="feedbackToast">✓ Correct!</div>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <a href="floor.html" class="btn-back">← Back</a>
+  <div class="topbar-title" id="topbarTitle">💀 BOSS FIGHT</div>
+  <div class="timer-pill">
+    <span class="timer-icon">⏱</span>
+    <span id="timerDisplay">00:00</span>
+  </div>
+</div>
+
+<!-- Progress bar soal -->
+<div class="quiz-progress-wrap">
+  <div class="quiz-progress-bar" id="quizProgressBar" style="width:0%"></div>
+</div>
+
+<!-- ===== BOSS ARENA ===== -->
+<div class="page-layout" id="bossScreen">
+<div class="boss-arena">
+
+  <!-- Bos Section -->
+  <div class="boss-section">
+
+    <!-- HP Bar Bos -->
+    <div class="boss-hp-wrap">
+      <div class="boss-hp-label">
+        <span class="boss-name-tag" id="bossNameTag">💀 BOSS</span>
+        <span class="boss-hp-text"><span id="bossHPCurrent">100</span> / <span id="bossHPMax">100</span> HP</span>
+      </div>
+      <div class="boss-hp-track">
+        <div class="boss-hp-bar" id="bossHPBar"></div>
+      </div>
+    </div>
+
+    <!-- Gambar Bos -->
+    <div class="boss-img-wrap" id="bossImgWrap">
+      <img src="assets/images/boss.png" alt="Boss" class="boss-img" id="bossImg"/>
+      <div class="boss-shadow"></div>
+    </div>
+
+    <!-- HP Bar Player -->
+    <div class="player-hp-wrap">
+      <div class="player-hp-label">
+        <span>❤️ Your HP</span>
+        <span class="player-hp-text"><span id="playerHPCurrent">100</span> / <span id="playerHPMax">100</span></span>
+      </div>
+      <div class="player-hp-track">
+        <div class="player-hp-bar" id="playerHPBar"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="arena-divider">⚔️ VS ⚔️</div>
+
+  <!-- Question Section -->
+  <div class="quiz-container boss-quiz-container">
+
+    <div class="question-header">
+      <div class="question-counter">
+        Question <span id="qCurrent">1</span> / <span id="qTotal">10</span>
+      </div>
+      <div class="xp-badge">⭐ +<span id="qXP">5</span> XP per correct</div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-type-badge" id="qTypeBadge">💡 Multiple Choice</div>
+      <div class="question-text" id="questionText">Loading question...</div>
+      <div class="code-block" id="codeBlock" style="display:none;"></div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <button class="btn-next" id="btnNext">Next Question →</button>
+
+  </div>
+</div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div class="result-screen" id="resultScreen">
+  <div class="result-card">
+
+    <div class="result-header" id="resultHeader">
+      <span class="result-trophy" id="resultTrophy">🏆</span>
+      <div class="result-title" id="resultTitle">BOSS DEFEATED!</div>
+      <div class="result-subtitle" id="resultSubtitle">You are the Java Hero!</div>
+    </div>
+
+    <div class="score-display">
+      <div class="score-big">
+        <div class="score-number" id="scoreNumber">100</div>
+        <div class="score-label">SCORE</div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-stats">
+        <div class="stat-item">
+          <div class="stat-num correct" id="statCorrect">0</div>
+          <div class="stat-label">Correct ✅</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num wrong" id="statWrong">0</div>
+          <div class="stat-label">Wrong ❌</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num xp" id="statXP">0</div>
+          <div class="stat-label">XP Earned ⭐</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 14px 32px 0;">
+      <div class="threshold-bar" id="thresholdBar">
+        <span id="thresholdIcon">✅</span>
+        <span id="thresholdMsg">Boss defeated — Floor unlocked!</span>
+      </div>
+    </div>
+
+    <div class="result-actions" id="resultActions">
+      <button class="btn-retry" id="btnRetry" onclick="retryBoss()">🔁 Retry Boss</button>
+      <button class="btn-review" onclick="showReview()">🔍 Review Answers</button>
+      <button class="btn-next-floor" id="btnNextFloor" style="display:none;" onclick="goNextFloor()">▶ Next Floor</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== REVIEW SCREEN ===== -->
+<div class="review-screen" id="reviewScreen">
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-title">📋 ANSWER REVIEW</div>
+      <button class="btn-back-result" onclick="backToResult()">← Back to Results</button>
+    </div>
+    <div class="review-list" id="reviewList"></div>
+  </div>
+</div>
+
+<!-- Pixel Pet -->
+<div class="pixel-pet" id="pixelPet">
+  <img src="assets/images/cat.gif" alt="Pixel Pet">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/pages/boss.js"></script>
+
+</body>
+</html>

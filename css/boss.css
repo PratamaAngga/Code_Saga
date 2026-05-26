@@ -1,0 +1,430 @@
+body {
+  /* Pastikan url '../' karena file ini ada di dalam folder css/ */
+  background: url('../assets/images/bg-dungeon.png') center/cover no-repeat fixed;
+}
+/* Dark overlay khusus quiz agar nuansa berbeda (lebih misterius/malam) */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  /* Menggunakan warna hitam transparan (opacity 60%) agar gambar tetap terlihat tapi tulisan jelas */
+  background: rgba(0, 0, 0, 0.6); 
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ================================================
+   BOSS FIGHT — boss.css
+   Tambahan di atas quiz.css (tidak menimpa quiz)
+================================================ */
+
+/* ── Damage overlay (layar merah saat salah) ── */
+.damage-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(220, 30, 30, 0.0);
+  pointer-events: none;
+  z-index: 9999;
+  transition: background 0.05s;
+}
+.damage-overlay.flash {
+  animation: damageFlash 0.6s ease-out forwards;
+}
+@keyframes damageFlash {
+  0%   { background: rgba(220, 30, 30, 0.55); }
+  40%  { background: rgba(220, 30, 30, 0.45); }
+  100% { background: rgba(220, 30, 30, 0.0);  }
+}
+
+/* ── Screen shake saat salah ── */
+@keyframes screenShake {
+  0%,100% { transform: translate(0, 0) rotate(0deg); }
+  15%      { transform: translate(-6px, 4px) rotate(-1deg); }
+  30%      { transform: translate(6px, -4px) rotate(1deg); }
+  45%      { transform: translate(-5px, 3px) rotate(0deg); }
+  60%      { transform: translate(5px, -2px) rotate(-0.5deg); }
+  75%      { transform: translate(-3px, 2px) rotate(0.5deg); }
+}
+body.screen-shake {
+  animation: screenShake 0.55s ease-out;
+}
+
+/* ── Boss img shake saat kena damage ── */
+@keyframes bossShake {
+  0%,100% { transform: translateX(0) scale(1); }
+  15%      { transform: translateX(-10px) scale(1.03); }
+  35%      { transform: translateX(10px) scale(1.03); }
+  55%      { transform: translateX(-7px) scale(1.01); }
+  75%      { transform: translateX(7px) scale(1.01); }
+}
+.boss-img.hit {
+  animation: bossShake 0.45s ease-out;
+  filter: brightness(1.6) saturate(0.4) sepia(0.5);
+}
+
+/* ── Boss arena layout ── */
+.boss-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 12px 16px 32px;
+  width: 100%;
+}
+
+/* ── Boss section (gambar + HP bar) ── */
+.boss-section {
+  background: linear-gradient(135deg, #1a0a2e 0%, #2d1254 60%, #1a0a2e 100%);
+  border: 2px solid #7c3aed;
+  border-radius: 20px;
+  padding: 20px 24px 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 32px rgba(124, 58, 237, 0.3), inset 0 0 40px rgba(0,0,0,0.3);
+}
+.boss-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 20px,
+    rgba(124,58,237,0.04) 20px,
+    rgba(124,58,237,0.04) 21px
+  );
+  pointer-events: none;
+}
+
+/* ── Boss HP bar ── */
+.boss-hp-wrap {
+  margin-bottom: 12px;
+}
+.boss-hp-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.boss-name-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  color: #e879f9;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(232,121,249,0.6);
+}
+.boss-hp-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #f0abfc;
+}
+.boss-hp-track {
+  width: 100%;
+  height: 18px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 10px;
+  border: 2px solid #7c3aed;
+  overflow: hidden;
+  position: relative;
+}
+.boss-hp-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+  border-radius: 8px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.boss-hp-bar::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 6px; right: 6px;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
+}
+/* HP warning colors */
+.boss-hp-bar.warning {
+  background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24);
+}
+.boss-hp-bar.critical {
+  background: linear-gradient(90deg, #7f1d1d, #b91c1c, #dc2626);
+  animation: hpPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes hpPulse {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.4); }
+}
+
+/* ── Boss image ── */
+.boss-img-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 12px;
+  position: relative;
+}
+.boss-img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(232,121,249,0.5));
+  transition: filter 0.3s;
+  image-rendering: pixelated;
+}
+.boss-shadow {
+  width: 120px;
+  height: 12px;
+  background: radial-gradient(ellipse, rgba(124,58,237,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  margin-top: -6px;
+}
+
+/* ── Damage number floating ── */
+.dmg-number {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.1rem;
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251,191,36,0.8), 2px 2px 0 #92400e;
+  pointer-events: none;
+  animation: floatUp 0.9s ease-out forwards;
+  z-index: 10;
+  white-space: nowrap;
+}
+.dmg-number.player-dmg {
+  color: #f87171;
+  text-shadow: 0 0 12px rgba(248,113,113,0.8), 2px 2px 0 #7f1d1d;
+  top: auto;
+  bottom: 50px;
+}
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.2); }
+  60%  { opacity: 1; transform: translateX(-50%) translateY(-36px) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-54px) scale(0.8); }
+}
+
+/* ── Player HP bar ── */
+.player-hp-wrap {
+  margin-top: 0;
+}
+.player-hp-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #a5f3fc;
+}
+.player-hp-text {
+  color: #67e8f9;
+}
+.player-hp-track {
+  width: 100%;
+  height: 16px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 10px;
+  border: 2px solid #0e7490;
+  overflow: hidden;
+}
+.player-hp-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #0891b2, #06b6d4, #67e8f9);
+  border-radius: 8px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+.player-hp-bar::after {
+  content: '';
+  display: block;
+  margin: 2px 6px 0;
+  height: 3px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
+}
+.player-hp-bar.warning {
+  background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24);
+}
+.player-hp-bar.critical {
+  background: linear-gradient(90deg, #7f1d1d, #b91c1c, #dc2626);
+  animation: hpPulse 0.8s ease-in-out infinite alternate;
+}
+
+/* ── Arena divider ── */
+.arena-divider {
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  color: #7c3aed;
+  letter-spacing: 3px;
+  padding: 10px 0 6px;
+  text-shadow: 0 0 10px rgba(124,58,237,0.6);
+}
+
+/* ── Quiz section override untuk boss ── */
+.boss-quiz-container {
+  padding-top: 4px;
+}
+
+/* ── Result/review: boss theme tweaks ── */
+#resultHeader.boss-win {
+  background: linear-gradient(135deg, #1a0a2e, #4c1d95);
+  border-bottom: 2px solid #7c3aed;
+}
+#resultHeader.boss-win .result-trophy {
+  animation: bossWinPop 0.6s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes bossWinPop {
+  0%   { transform: scale(0) rotate(-20deg); }
+  70%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+#resultHeader.boss-lose {
+  background: linear-gradient(135deg, #1c0606, #450a0a);
+  border-bottom: 2px solid #dc2626;
+}
+
+/* ── Game Over overlay (boss mencapai 0 HP player) ── */
+.gameover-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 800;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.gameover-overlay.show {
+  display: flex;
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.gameover-box {
+  background: linear-gradient(135deg, #1c0606, #450a0a);
+  border: 3px solid #dc2626;
+  border-radius: 24px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(220,38,38,0.5);
+}
+.gameover-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+.gameover-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.3rem;
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239,68,68,0.7);
+  margin-bottom: 8px;
+}
+.gameover-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fca5a5;
+  margin-bottom: 28px;
+}
+.gameover-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.btn-gameover-retry {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 0 #991b1b;
+}
+.btn-gameover-retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #991b1b;
+}
+.btn-gameover-back {
+  background: rgba(255,255,255,0.08);
+  color: #fca5a5;
+  border: 1px solid #dc2626;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-gameover-back:hover {
+  background: rgba(220,38,38,0.15);
+}
+
+/* ── Boss defeated celebrasi ── */
+.boss-defeated-flash {
+  animation: bossDefeatedFlash 0.5s ease-out;
+}
+@keyframes bossDefeatedFlash {
+  0%   { filter: brightness(3) saturate(0); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+/* ── Achievement Toast ── */
+.achievement-toast {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1a0a2e, #3b0764);
+  border: 2px solid #a855f7;
+  border-radius: 16px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 0 30px rgba(168,85,247,0.5), 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 9999;
+  transition: bottom 0.5s cubic-bezier(.4,0,.2,1);
+  min-width: 280px;
+}
+.achievement-toast.show {
+  bottom: 32px;
+}
+.ach-icon {
+  font-size: 2rem;
+  animation: achIconSpin 0.6s cubic-bezier(.4,0,.2,1);
+}
+@keyframes achIconSpin {
+  0%   { transform: scale(0) rotate(-180deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.ach-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ach-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.ach-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  color: #f0abfc;
+  text-shadow: 0 0 10px rgba(240,171,252,0.6);
+}
