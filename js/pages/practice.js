@@ -1,5 +1,5 @@
 /* ================================================
-   SUPABASE
+   SUPABASE INIT
 ================================================ */
 const SUPABASE_URL  = 'https://ihwpxhqflghiblbfjonx.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlod3B4aHFmbGdoaWJsYmZqb254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzI3MTYsImV4cCI6MjA5Mjg0ODcxNn0.bk_CewautLlPWewjZCXQMKNY8zPF1wkPVZu-VNxOzpc';
@@ -7,8 +7,10 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 /* ================================================
-   PRACTICE QUESTIONS
+   PRACTICE CONFIG
+   - XP_PER_CORRECT : XP reward per jawaban benar (3 XP)
 ================================================ */
+const XP_PER_CORRECT = 3; 
 const QUESTIONS = [];
 
 /* ================================================
@@ -23,12 +25,15 @@ const TIPS = {
 /* ================================================
    STATE
 ================================================ */
-let idx         = 0;
-let answers     = [];
-let selected    = null;
-let expOpen     = false;
-let floorId     = 1;
-let currentUser = null;
+let idx              = 0;
+let answers          = [];
+let selected         = null;
+let expOpen          = false;
+let floorId          = 1;
+let actualFloorDbId  = null; // ID UUID/bigint asli dari tabel floors di DB
+let practiceModuleId = null; // ID modul dari database agar tersinkronisasi dengan floor.html
+let progressRowId    = null; // ID row dari user_floor_progress
+let currentUser      = null;
 
 /* ================================================
    INIT
@@ -43,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('topFloorLabel').textContent = `Floor ${floorId}: Java Basics`;
 
   try {
+    // 1. Dapatkan data floor secara detail
     const { data: floorData } = await sb
       .from('floors')
       .select('id, title')
@@ -52,18 +58,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('floorData:', floorData);
 
     if (floorData) {
+      actualFloorDbId = floorData.id;
       document.getElementById('topFloorLabel').textContent = floorData.title;
 
+      // 2. Dapatkan data room bertipe 'practice' di floor ini
       const { data: roomData } = await sb
         .from('rooms')
         .select('id')
         .eq('floor_id', floorData.id)
-        .eq('room_type', 'quiz')
+        .eq('room_type', 'practice')
         .single();
 
       console.log('roomData:', roomData);
 
       if (roomData) {
+        // Inisialisasi baris progress di user_floor_progress (status: in_progress)
+        await initFloorProgress(roomData.id);
+
+        // Cari ID modul kuis di database agar progress di floor.html tersinkronisasi otomatis
+        await fetchPracticeModuleId(floorData.id);
+
+        // 3. Load pertanyaan practice dari room tersebut
         const { data: qData, error } = await sb
           .from('questions')
           .select('*')
@@ -85,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             code:            null,
             options:         q.options,
             answer:          q.correct_index,
-            xp:              q.damage_value ?? 10,
+            xp:              XP_PER_CORRECT, // Override menggunakan konstanta 3 XP
             explanation:     q.explanation,
             explanationCode: null,
             tip:             q.tips,
@@ -94,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } catch(e) {
-    console.warn('Fallback ke sample questions:', e.message);
+    console.warn('Gagal memuat kueri database:', e.message);
   }
 
   answers = new Array(QUESTIONS.length).fill(null);
@@ -102,6 +117,82 @@ document.addEventListener('DOMContentLoaded', async () => {
   render(0);
   updateProgress();
 });
+
+/* ================================================
+   INITIALIZE FLOOR PROGRESS (in_progress)
+================================================ */
+async function initFloorProgress(roomDbId) {
+  if (!currentUser || !roomDbId || !actualFloorDbId) return;
+  try {
+    const { data: existing } = await sb
+      .from('user_floor_progress')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('floor_id', actualFloorDbId) // FIX: Menggunakan ID database asli, bukan floorId (nomor lantai)
+      .eq('current_room_id', roomDbId)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      progressRowId = existing.id;
+      console.log('📌 Progress floor ditemukan, ID:', progressRowId);
+    } else {
+      // Buat baru jika belum pernah dibuka
+      const { data: inserted, error } = await sb
+        .from('user_floor_progress')
+        .insert({
+          user_id:         currentUser.id,
+          floor_id:        actualFloorDbId, // FIX: Menggunakan ID database asli untuk menghindari FK violation
+          current_room_id: roomDbId,
+          status:          'in_progress',
+          score:           0,
+          xp_earned:       0,
+          hp_remaining:    100
+        })
+        .select('id')
+        .single();
+
+      if (!error && inserted) {
+        progressRowId = inserted.id;
+        console.log('✅ Progress floor diinisialisasi baru, ID:', progressRowId);
+      } else {
+        console.warn('Gagal inisialisasi progress:', error?.message);
+      }
+    }
+  } catch(e) { console.warn('initFloorProgress error:', e.message); }
+}
+
+/* ================================================
+   FETCH PRACTICE MODULE ID FROM DATABASE
+================================================ */
+async function fetchPracticeModuleId(floorDbId) {
+  try {
+    const { data: rooms } = await sb
+      .from('rooms')
+      .select('id')
+      .eq('floor_id', floorDbId);
+
+    if (!rooms || rooms.length === 0) return;
+    const roomIds = rooms.map(r => r.id);
+
+    // Practice adalah module_type = 'quiz' di floor.html
+    const { data: modData } = await sb
+      .from('modules')
+      .select('id')
+      .in('room_id', roomIds)
+      .eq('module_type', 'quiz')
+      .maybeSingle();
+
+    if (modData) {
+      practiceModuleId = modData.id;
+      console.log(`🎯 Terdeteksi Practice Module ID: ${practiceModuleId}`);
+    }
+  } catch (e) {
+    console.warn('fetchPracticeModuleId error:', e.message);
+  }
+}
+
 /* ================================================
    BUILD TABS
 ================================================ */
@@ -152,7 +243,7 @@ function render(i) {
   if (q.code) { cEl.textContent = q.code; cEl.style.display = 'block'; }
   else cEl.style.display = 'none';
 
-  // Options — 2 col if all options are short (<= 20 chars each)
+  // Options
   const allShort = q.options.every(o => o.length <= 20);
   const list     = document.getElementById('optsList');
   list.innerHTML  = '';
@@ -188,24 +279,26 @@ function render(i) {
 
   if (answers[i] !== null) showFeedback(answers[i].correct, q);
 
-  // Nav
+  // Navigasi Tombol Dinamis di Footer
   document.getElementById('btnPrev').disabled = (i === 0);
   const btnNext = document.getElementById('btnNext');
-const isLast = i >= QUESTIONS.length - 1;
+  const isLast = i >= QUESTIONS.length - 1;
 
-if (isLast && answers[i] !== null) {
-  btnNext.textContent = '🏠 Kembali ke Modul';
-  btnNext.onclick = () => window.location.href = 'floor.html';
-  btnNext.disabled = false;
-} else if (isLast) {
-  btnNext.textContent = 'Selanjutnya →';
-  btnNext.onclick = () => nav(1);
-  btnNext.disabled = true;
-} else {
-  btnNext.textContent = 'Selanjutnya →';
-  btnNext.onclick = () => nav(1);
-  btnNext.disabled = answers[i] === null;
-}
+  if (isLast) {
+    if (answers[i] !== null) {
+      btnNext.textContent = '🏠 Kembali ke Modul';
+      btnNext.disabled = false;
+      btnNext.onclick = () => { window.location.href = 'floor.html'; };
+    } else {
+      btnNext.textContent = 'Selanjutnya →';
+      btnNext.disabled = true;
+      btnNext.onclick = () => nav(1);
+    }
+  } else {
+    btnNext.textContent = 'Selanjutnya →';
+    btnNext.disabled = answers[i] === null;
+    btnNext.onclick = () => nav(1);
+  }
 
   // Active tab
   document.querySelectorAll('.q-tab').forEach((t, ti) => t.classList.toggle('active', ti === i));
@@ -236,7 +329,7 @@ function pickOption(oi) {
 /* ================================================
    VERIFY
 ================================================ */
-function verify() {
+async function verify() {
   if (selected === null) return;
   const q         = QUESTIONS[idx];
   const isCorrect = selected === q.answer;
@@ -263,16 +356,24 @@ function verify() {
       nextTab.innerHTML = `<span>${idx+2}</span>`;
     }
     document.getElementById('btnNext').disabled = false;
+  } else {
+    // Tombol Next pada soal terakhir diganti aksinya ke Kembali ke Modul
+    const btnNext = document.getElementById('btnNext');
+    btnNext.textContent = '🏠 Kembali ke Modul';
+    btnNext.disabled = false;
+    btnNext.onclick = () => { window.location.href = 'floor.html'; };
   }
 
-  // XP
+  // Tambahkan XP jika benar
   if (isCorrect && currentUser) {
-    sb.rpc('add_xp', { p_user_id: currentUser.id, p_xp: q.xp }).catch(() => {});
+    await addXpToUser(XP_PER_CORRECT);
+    await addXpToFloorProgress(XP_PER_CORRECT);
   }
 
-  // All done?
+  // Jika semua soal terjawab, kunci status modul menjadi selesai
   if (answers.every(a => a !== null)) {
     document.getElementById('btnGoQuiz').classList.add('show');
+    await saveModuleProgress();
     setTimeout(showModal, 700);
   }
 }
@@ -304,7 +405,6 @@ function showFeedback(isCorrect, q) {
     fbSub.textContent   = 'Jawaban yang kamu pilih kurang tepat.';
     fbXP.textContent    = '⭐ +0 XP';
     expBtn.style.display = 'flex';
-    // Auto-show explanation on wrong
     showExp(q);
   }
 }
@@ -395,6 +495,9 @@ function showModal() {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
+/* ================================================
+   RETRY PRACTICE
+================================================ */
 function retry() {
   answers  = new Array(QUESTIONS.length).fill(null);
   selected = null;
@@ -405,6 +508,122 @@ function retry() {
   updateProgress();
 }
 
+/* ================================================
+   GO TO QUIZ
+================================================ */
 function goQuiz() {
   window.location.href = `quiz.html?floor=${floorId}`;
+}
+
+/* ================================================
+   SAVE MODULE PROGRESS (user_module_progress)
+================================================ */
+async function saveModuleProgress() {
+  if (!currentUser || !practiceModuleId) return;
+  try {
+    const { data: existing } = await sb
+      .from('user_module_progress')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('module_id', practiceModuleId)
+      .maybeSingle();
+
+    if (!existing) {
+      const { error } = await sb
+        .from('user_module_progress')
+        .insert({
+          user_id:      currentUser.id,
+          module_id:    practiceModuleId,
+          floor_id:     actualFloorDbId, // Menyimpan ID UUID/bigint asli dari tabel floors
+          completed:    true,
+          completed_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      console.log('✅ Progress modul latihan berhasil didaftarkan ke user_module_progress!');
+    }
+  } catch (e) {
+    console.warn('Gagal menyimpan progress modul latihan:', e.message);
+  }
+}
+
+/* ================================================
+   TAMBAH XP KE TABEL public.users (KOLOM total_exp)
+================================================ */
+async function addXpToUser(xpAmount) {
+  if (!currentUser || xpAmount <= 0) return;
+  try {
+    const { data: userData, error: fetchErr } = await sb
+      .from('users')
+      .select('total_exp')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+ 
+    if (fetchErr) {
+      console.warn('addXpToUser fetch error:', fetchErr.message);
+      return;
+    }
+ 
+    const currentXp = userData ? (userData.total_exp || 0) : 0;
+    const newTotal = currentXp + xpAmount;
+ 
+    if (userData) {
+      await sb
+        .from('users')
+        .update({
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentUser.id);
+      console.log(`✅ Users total_exp +${xpAmount} → total ${newTotal}`);
+    } else {
+      await sb
+        .from('users')
+        .insert({
+          id:         currentUser.id,
+          email:      currentUser.email,
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        });
+      console.log(`✅ Users total_exp +${xpAmount} (Profil baru dibuat) → total ${newTotal}`);
+    }
+  } catch(e) { console.warn('addXpToUser error:', e.message); }
+}
+
+/* ================================================
+   TAMBAH XP KE TABEL user_floor_progress (KOLOM xp_earned)
+================================================ */
+async function addXpToFloorProgress(xpAmount) {
+  if (!progressRowId || xpAmount <= 0) return;
+  try {
+    const { data: progressData, error: fetchErr } = await sb
+      .from('user_floor_progress')
+      .select('xp_earned')
+      .eq('id', progressRowId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      console.warn('addXpToFloorProgress fetch error:', fetchErr.message);
+      return;
+    }
+
+    const currentXp = progressData ? (progressData.xp_earned || 0) : 0;
+    const newTotal = currentXp + xpAmount;
+
+    const { error: updateErr } = await sb
+      .from('user_floor_progress')
+      .update({
+        xp_earned: newTotal,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', progressRowId);
+
+    if (updateErr) {
+      console.warn('addXpToFloorProgress update error:', updateErr.message);
+    } else {
+      console.log(`✅ user_floor_progress xp_earned +${xpAmount} → total ${newTotal}`);
+    }
+  } catch (e) {
+    console.warn('addXpToFloorProgress error:', e.message);
+  }
 }

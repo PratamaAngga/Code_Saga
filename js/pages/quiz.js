@@ -7,7 +7,29 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 /* ================================================
-   QUIZ DATA
+   QUIZ CONFIG
+================================================ */
+const PASS_THRESHOLD = 75; // Batas minimal kelulusan (75%)
+const XP_PER_CORRECT = 5;  // Reward XP per jawaban kuis yang benar
+
+/* ================================================
+   STATE
+================================================ */
+let questions      = [];
+let currentIdx     = 0;
+let selectedAnswer = null;
+let answers        = []; // Menyimpan data { questionIdx, selected, correct }
+let timerInterval  = null;
+let startTime      = null;
+let currentUser    = null;
+let floorId        = 1;
+let roomId         = 16;  // Dinamis: 15 + floorId
+let sessionXpEarned   = 0; // Melacak perolehan XP selama kuis aktif (untuk rollback)
+let quizModuleId   = null; // Menyimpan ID modul kuis agar sinkron dengan floor.html
+let actualFloorDbId  = null; // ID UUID/bigint asli dari tabel floors di DB
+
+/* ================================================
+   SAMPLE QUESTIONS (Fallback jika kueri database gagal)
 ================================================ */
 const SAMPLE_QUESTIONS = [
   {
@@ -17,165 +39,112 @@ const SAMPLE_QUESTIONS = [
     options:['int x = 5;', 'integer x = 5;', 'Int x = 5;', 'var int x = 5;'],
     answer: 0,
     explanation: 'In Java, integer variables are declared using the lowercase keyword "int".'
-  },
-  {
-    id:2, type:'multiple',
-    question:'What will be the output of the following code?',
-    code: 'int x = 10;\nint y = 3;\nSystem.out.println(x % y);',
-    options:['3', '1', '0', '10'],
-    answer: 1,
-    explanation: 'The % operator returns the remainder. 10 divided by 3 = 3 remainder 1.'
-  },
-  {
-    id:3, type:'multiple',
-    question:'Which data type is used to store a single character in Java?',
-    code: null,
-    options:['String', 'char', 'character', 'letter'],
-    answer: 1,
-    explanation: '"char" is the Java data type for a single Unicode character, e.g. char c = \'A\';'
-  },
-  {
-    id:4, type:'multiple',
-    question:'What keyword is used to declare a constant in Java?',
-    code: null,
-    options:['const', 'static', 'final', 'constant'],
-    answer: 2,
-    explanation: 'Java uses the "final" keyword to declare constants. Once assigned, the value cannot change.'
-  },
-  {
-    id:5, type:'multiple',
-    question:'Which of the following is NOT a valid Java data type?',
-    code: null,
-    options:['float', 'double', 'real', 'long'],
-    answer: 2,
-    explanation: '"real" is not a Java data type. Java uses float and double for decimal numbers.'
-  },
-  {
-    id:6, type:'multiple',
-    question:'What is the output of this code?',
-    code: 'double d = 9.99;\nint i = (int) d;\nSystem.out.println(i);',
-    options:['10', '9.99', '9', 'Error'],
-    answer: 2,
-    explanation: 'Casting double to int truncates the decimal part. 9.99 becomes 9.'
-  },
-  {
-    id:7, type:'multiple',
-    question:'Which statement correctly declares a String variable?',
-    code: null,
-    options:['string name = "Java";', 'String name = "Java";', 'STRING name = "Java";', 'str name = "Java";'],
-    answer: 1,
-    explanation: 'In Java, String starts with a capital "S" and is a class, not a primitive type.'
-  },
-  {
-    id:8, type:'multiple',
-    question:'What is the default value of a boolean variable in Java?',
-    code: null,
-    options:['true', 'null', 'false', '0'],
-    answer: 2,
-    explanation: 'The default value for a boolean instance variable in Java is false.'
-  },
-  {
-    id:9, type:'multiple',
-    question:'What will this code print?',
-    code: 'int a = 5;\na += 3;\nSystem.out.println(a);',
-    options:['5', '3', '53', '8'],
-    answer: 3,
-    explanation: '+= adds the right operand to the variable. 5 + 3 = 8.'
-  },
-  {
-    id:10, type:'multiple',
-    question:'Which of the following correctly declares a long variable?',
-    code: null,
-    options:['long x = 100L;', 'long x = 100l;', 'long x = 100;', 'All of the above'],
-    answer: 3,
-    explanation: 'All three declarations are valid in Java. The L or l suffix is optional for long literals that fit.'
-  },
-  {
-    id:11, type:'multiple',
-    question:'What is type casting in Java?',
-    code: null,
-    options:['Converting one data type to another', 'Declaring multiple variables', 'A type of loop', 'A method in String class'],
-    answer: 0,
-    explanation: 'Type casting is the process of converting a value from one data type to another compatible type.'
-  },
-  {
-    id:12, type:'multiple',
-    question:'Which operator is used for string concatenation in Java?',
-    code: null,
-    options:['*', '&', '+', '||'],
-    answer: 2,
-    explanation: 'The + operator is used to concatenate (join) strings in Java.'
-  },
-  {
-    id:13, type:'multiple',
-    question:'What will this code output?',
-    code: 'final int MAX = 100;\nSystem.out.println(MAX);',
-    options:['Error', '100', 'MAX', 'null'],
-    answer: 1,
-    explanation: 'final declares a constant. MAX = 100 and can be printed normally.'
-  },
-  {
-    id:14, type:'multiple',
-    question:'Which of these is the correct range of a byte in Java?',
-    code: null,
-    options:['-256 to 255', '0 to 255', '-128 to 127', '-32768 to 32767'],
-    answer: 2,
-    explanation: 'A Java byte is 8 bits, ranging from -128 to 127 (2^7 = 128).'
-  },
-  {
-    id:15, type:'multiple',
-    question:'What is implicit type conversion (widening) in Java?',
-    code: null,
-    options:['int to byte', 'double to float', 'int to double', 'long to int'],
-    answer: 2,
-    explanation: 'Widening converts smaller to larger types (int → double) automatically without data loss.'
-  },
-  {
-    id:16, type:'multiple',
-    question:'What will this code print?',
-    code: 'String s = "Java";\nSystem.out.println(s.length());',
-    options:['4', '5', '3', 'Error'],
-    answer: 0,
-    explanation: '"Java" has 4 characters. The length() method returns 4.'
-  },
+  }
 ];
-
-/* ================================================
-   STATE
-================================================ */
-const PASS_THRESHOLD = 75; // ← ubah jika ingin ganti minimum nilai
-const XP_PER_CORRECT = 5;
-
-let questions      = [];
-let currentIdx     = 0;
-let selectedAnswer = null;
-let answers        = []; // { questionIdx, selected, correct }
-let timerInterval  = null;
-let startTime      = null;
-let currentUser    = null;
-let floorId        = 1; // ← ambil dari URL param atau sessionStorage
 
 /* ================================================
    INIT
 ================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Cek login
+  // Verifikasi login user
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
   currentUser = session.user;
 
-  // Ambil floor dari URL: quiz.html?floor=1
+  // Ambil data floor dari parameter URL, misal: quiz.html?floor=1
   const params = new URLSearchParams(window.location.search);
   floorId = parseInt(params.get('floor') || '1');
+  
+  // Hitung Room ID Kuis secara otomatis (Floor 1 = 16, Floor 2 = 17, dst)
+  roomId = 15 + floorId;
+  
   document.getElementById('topbarTitle').textContent = `⚔ FLOOR ${floorId} QUIZ`;
 
-  // Load soal (pakai sample dulu)
-  questions = SAMPLE_QUESTIONS;
+  // Cari ID modul kuis di database agar progress di floor.html tersinkronisasi otomatis
+  await fetchQuizModuleId();
+
+  // Load pertanyaan kuis dari database secara dinamis
+  await loadQuestions();
 
   document.getElementById('qTotal').textContent = questions.length;
   startTimer();
   renderQuestion(0);
 });
+
+/* ================================================
+   FETCH QUIZ MODULE ID FROM DATABASE
+================================================ */
+async function fetchQuizModuleId() {
+  try {
+    // 1. Dapatkan ID asli dari floor berdasarkan nomor lantai
+    const { data: floorData } = await sb
+      .from('floors')
+      .select('id')
+      .eq('floor_number', floorId)
+      .maybeSingle();
+
+    if (!floorData) return;
+    actualFloorDbId = floorData.id;
+
+    // 2. Ambil semua room yang terdaftar di floor tersebut
+    const { data: rooms } = await sb
+      .from('rooms')
+      .select('id')
+      .eq('floor_id', floorData.id);
+
+    if (!rooms || rooms.length === 0) return;
+    const roomIds = rooms.map(r => r.id);
+
+    // 3. Cari modul kuis yang bertipe 'quiz_battle' di dalam room tersebut
+    const { data: modData } = await sb
+      .from('modules')
+      .select('id')
+      .in('room_id', roomIds)
+      .eq('module_type', 'quiz_battle')
+      .maybeSingle();
+
+    if (modData) {
+      quizModuleId = modData.id;
+      console.log(`🎯 Terdeteksi Module ID Kuis untuk Floor ${floorId}: ${quizModuleId}`);
+    }
+  } catch (e) {
+    console.warn('Gagal mencocokkan modul kuis dengan floor.js:', e.message);
+  }
+}
+
+/* ================================================
+   LOAD QUESTIONS FROM SUPABASE
+================================================ */
+async function loadQuestions() {
+  try {
+    const { data, error } = await sb
+      .from('questions')
+      .select('id, question_text, options, correct_index, explanation, type')
+      .eq('room_id', roomId)
+      .eq('type', 'quiz')
+      .order('order_index', { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      console.warn('Soal kuis tidak ditemukan di DB, pakai sample fallback.');
+      questions = SAMPLE_QUESTIONS;
+      return;
+    }
+
+    // Map data dari database ke format kuis
+    questions = data.map(q => ({
+      id:           q.id,
+      type:         'multiple',
+      question:     q.question_text,
+      code:         null,
+      options:      Array.isArray(q.options) ? q.options : Object.values(q.options),
+      answer:       q.correct_index,
+      explanation:  q.explanation || '',
+    }));
+  } catch(e) {
+    console.warn('loadQuestions kuis error:', e.message);
+    questions = SAMPLE_QUESTIONS;
+  }
+}
 
 /* ================================================
    TIMER
@@ -188,7 +157,7 @@ function startTimer() {
     const s = String(elapsed % 60).padStart(2, '0');
     const el = document.getElementById('timerDisplay');
     el.textContent = `${m}:${s}`;
-    el.classList.toggle('warning', elapsed > 600); // merah setelah 10 menit
+    el.classList.toggle('warning', elapsed > 600); // Merah setelah 10 menit
   }, 1000);
 }
 
@@ -205,17 +174,17 @@ function renderQuestion(idx) {
   const q = questions[idx];
 
   // Progress bar
-  const pct = ((idx) / questions.length) * 100;
+  const pct = (idx / questions.length) * 100;
   document.getElementById('quizProgressBar').style.width = pct + '%';
 
   // Counter
   document.getElementById('qCurrent').textContent = idx + 1;
   document.getElementById('qXP').textContent = XP_PER_CORRECT;
 
-  // Question
+  // Teks Pertanyaan
   document.getElementById('questionText').textContent = q.question;
 
-  // Code block
+  // Code Block
   const codeEl = document.getElementById('codeBlock');
   if (q.code) {
     codeEl.style.display = 'block';
@@ -224,20 +193,20 @@ function renderQuestion(idx) {
     codeEl.style.display = 'none';
   }
 
-  // Type badge
+  // Badge Tipe Soal
   document.getElementById('qTypeBadge').textContent = '💡 Multiple Choice';
 
-  // Reset card animation
+  // Reset Animasi Kartu
   const card = document.getElementById('questionCard');
   card.style.animation = 'none';
   requestAnimationFrame(() => { card.style.animation = ''; });
 
-  // Next button
+  // Tombol Next
   const btnNext = document.getElementById('btnNext');
   btnNext.classList.remove('visible');
   btnNext.textContent = idx === questions.length - 1 ? '🏁 Finish Quiz' : 'Next Question →';
 
-  // Options
+  // Render Pilihan Ganda
   const grid = document.getElementById('optionsGrid');
   grid.innerHTML = '';
   const labels = ['A', 'B', 'C', 'D'];
@@ -253,27 +222,34 @@ function renderQuestion(idx) {
 /* ================================================
    SELECT ANSWER
 ================================================ */
-function selectAnswer(idx) {
-  if (selectedAnswer !== null) return; // already answered
+async function selectAnswer(idx) {
+  if (selectedAnswer !== null) return;
   selectedAnswer = idx;
   const q = questions[currentIdx];
   const isCorrect = idx === q.answer;
   const btns = document.querySelectorAll('.option-btn');
 
-  // Record
+  // Rekam jawaban player
   answers.push({ questionIdx: currentIdx, selected: idx, correct: isCorrect });
 
-  // Visual feedback
+  // Efek visual jawaban
   btns[idx].classList.add(isCorrect ? 'correct' : 'wrong');
   if (!isCorrect) {
-    btns[q.answer].classList.add('correct'); // show right answer
+    btns[q.answer].classList.add('correct'); 
   }
   btns.forEach(b => b.disabled = true);
 
-  // Toast
+  // Tampilkan toast feedback
   showToast(isCorrect);
 
-  // Show next button
+  // Jika jawaban benar, langsung tambahkan XP secara real-time
+  if (isCorrect) {
+    const xpThisQuestion = XP_PER_CORRECT;
+    sessionXpEarned += xpThisQuestion;
+    await addXpToUser(xpThisQuestion);
+  }
+
+  // Tampilkan tombol next setelah delay kecil
   setTimeout(() => {
     document.getElementById('btnNext').classList.add('visible');
   }, 600);
@@ -282,17 +258,12 @@ function selectAnswer(idx) {
 /* ================================================
    TOAST FEEDBACK
 ================================================ */
-/* ================================================
-   TOAST FEEDBACK
-================================================ */
-let toastTimeout; // Tambahkan variabel ini di luar fungsi
-
+let toastTimeout;
 function showToast(isCorrect) {
   const toast = document.getElementById('feedbackToast');
-  toast.textContent = isCorrect ? '✓ Correct! +' + XP_PER_CORRECT + ' XP' : '✗ Wrong!';
+  toast.textContent = isCorrect ? `✓ Correct! +${XP_PER_CORRECT} XP` : '✗ Wrong!';
   toast.className = 'feedback-toast show' + (isCorrect ? '' : ' wrong-toast');
   
-  // Hapus timer lama agar animasinya tidak bertabrakan jika dipanggil berdekatan
   clearTimeout(toastTimeout); 
   toastTimeout = setTimeout(() => { 
     toast.classList.remove('show'); 
@@ -300,7 +271,7 @@ function showToast(isCorrect) {
 }
 
 /* ================================================
-   NEXT QUESTION / FINISH
+   NEXT / FINISH ACTION
 ================================================ */
 document.getElementById('btnNext').addEventListener('click', () => {
   if (selectedAnswer === null) return;
@@ -315,10 +286,10 @@ document.getElementById('btnNext').addEventListener('click', () => {
 /* ================================================
    FINISH QUIZ
 ================================================ */
-function finishQuiz() {
+async function finishQuiz() {
   stopTimer();
 
-  // Progress bar 100%
+  // Set progress bar penuh
   document.getElementById('quizProgressBar').style.width = '100%';
 
   const correctCount = answers.filter(a => a.correct).length;
@@ -327,15 +298,15 @@ function finishQuiz() {
   const xpEarned     = correctCount * XP_PER_CORRECT;
   const passed       = score >= PASS_THRESHOLD;
 
-  // Hide quiz screen
+  // Sembunyikan container kuis utama
   document.getElementById('quizScreen').style.display = 'none';
 
-  // Fill result
+  // Render papan skor hasil akhir
   document.getElementById('scoreNumber').textContent = score;
   document.getElementById('scoreNumber').className   = 'score-number ' + (passed ? 'pass' : 'fail');
   document.getElementById('statCorrect').textContent = correctCount;
   document.getElementById('statWrong').textContent   = wrongCount;
-  document.getElementById('statXP').textContent      = xpEarned;
+  document.getElementById('statXP').textContent      = passed ? xpEarned : 0; // Tampilkan 0 jika gagal
 
   const header   = document.getElementById('resultHeader');
   const trophy   = document.getElementById('resultTrophy');
@@ -346,28 +317,132 @@ function finishQuiz() {
   const thMsg    = document.getElementById('thresholdMsg');
 
   if (passed) {
-    header.className = 'result-header pass';
-    trophy.textContent = '🏆';
-    title.textContent  = 'QUIZ PASSED!';
-    subtitle.textContent = `Amazing! You scored ${score}/100 — Floor ${floorId + 1} unlocked!`;
-    thBar.className = 'threshold-bar pass';
-    thIcon.textContent = '🎉';
-    thMsg.textContent  = `Score ${score} ≥ ${PASS_THRESHOLD} — You unlocked the next floor!`;
+    // ── LULUS (Skor >= 75) ──────────────────────────────
+    header.className     = 'result-header pass';
+    trophy.textContent   = '🏆';
+    title.textContent    = 'QUIZ PASSED!';
+    subtitle.textContent = `Luar biasa! Kamu mendapatkan nilai ${score}/100 — Floor ${floorId + 1} Terbuka!`;
+    thBar.className      = 'threshold-bar pass';
+    thIcon.textContent   = '🎉';
+    thMsg.textContent    = `Skor ${score} ≥ ${PASS_THRESHOLD} — Kamu berhasil membuka lantai baru!`;
     document.getElementById('btnNextFloor').style.display = 'flex';
     spawnConfetti();
-    saveProgress(score, xpEarned, true);
+    
+    // Simpan progres kelulusan kuis
+    await saveProgress(score, xpEarned, true);
+
+    // Reset pelacak sesi karena XP resmi dipertahankan
+    sessionXpEarned = 0;
   } else {
-    header.className = 'result-header fail';
-    trophy.textContent = '😢';
-    title.textContent  = 'QUIZ FAILED';
-    subtitle.textContent = `You scored ${score}/100. Need ≥ ${PASS_THRESHOLD} to proceed.`;
-    thBar.className = 'threshold-bar fail';
-    thIcon.textContent = '❌';
-    thMsg.textContent  = `Score ${score} < ${PASS_THRESHOLD} — Retry to unlock the next floor.`;
-    saveProgress(score, xpEarned, false);
+    // ── GAGAL (Skor < 75) ──────────────────────────────
+    header.className     = 'result-header fail';
+    trophy.textContent   = '😢';
+    title.textContent    = 'QUIZ FAILED';
+    subtitle.textContent = `Skor kamu ${score}/100. Kamu butuh minimal ${PASS_THRESHOLD} untuk lolos!`;
+    thBar.className      = 'threshold-bar fail';
+    thIcon.textContent   = '❌';
+    thMsg.textContent    = `Skor ${score} < ${PASS_THRESHOLD} — Silakan ulangi untuk bisa lanjut!`;
+    document.getElementById('btnNextFloor').style.display = 'none';
+
+    // ROLLBACK XP karena tidak lolos skor minimum kuis
+    if (sessionXpEarned > 0) {
+      await subtractXpFromUser(sessionXpEarned);
+      sessionXpEarned = 0;
+    }
+
+    // Simpan hasil progres sebagai gagal
+    await saveProgress(score, 0, false);
   }
 
   document.getElementById('resultScreen').classList.add('show');
+}
+
+/* ================================================
+   TAMBAH XP KE TABEL public.users (KOLOM total_exp)
+================================================ */
+async function addXpToUser(xpAmount) {
+  if (!currentUser || xpAmount <= 0) return;
+  try {
+    const { data: userData, error: fetchErr } = await sb
+      .from('users')
+      .select('total_exp')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+ 
+    if (fetchErr) {
+      console.warn('addXpToUser fetch error:', fetchErr.message);
+      return;
+    }
+ 
+    const currentXp = userData ? (userData.total_exp || 0) : 0;
+    const newTotal = currentXp + xpAmount;
+ 
+    if (userData) {
+      // Jika data profil ada, lakukan UPDATE (aman dari error email constraint)
+      await sb
+        .from('users')
+        .update({
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentUser.id);
+      console.log(`✅ Users total_exp +${xpAmount} → total ${newTotal}`);
+    } else {
+      // Jika data profil kosong, lakukan INSERT lengkap dengan email dari auth session
+      await sb
+        .from('users')
+        .insert({
+          id:         currentUser.id,
+          email:      currentUser.email,
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        });
+      console.log(`✅ Users total_exp +${xpAmount} (Profil baru berhasil dibuat) → total ${newTotal}`);
+    }
+  } catch(e) { console.warn('addXpToUser error:', e.message); }
+}
+
+/* ================================================
+   SUBTRACT/ROLLBACK XP DARI TABEL public.users
+================================================ */
+async function subtractXpFromUser(xpAmount) {
+  if (!currentUser || xpAmount <= 0) return;
+  try {
+    const { data: userData, error: fetchErr } = await sb
+      .from('users')
+      .select('total_exp')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+ 
+    if (fetchErr) {
+      console.warn('subtractXpFromUser fetch error:', fetchErr.message);
+      return;
+    }
+ 
+    const currentXp = userData ? (userData.total_exp || 0) : 0;
+    const newTotal = Math.max(0, currentXp - xpAmount);
+ 
+    if (userData) {
+      await sb
+        .from('users')
+        .update({
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentUser.id);
+      console.log(`⚠️ XP -${xpAmount} (gagal/score < ${PASS_THRESHOLD}) → total ${newTotal}`);
+    } else {
+      await sb
+        .from('users')
+        .insert({
+          id:         currentUser.id,
+          email:      currentUser.email,
+          total_exp:  newTotal,
+          updated_at: new Date().toISOString(),
+        });
+      console.log(`⚠️ XP -${xpAmount} (Profil baru berhasil dibuat) → total ${newTotal}`);
+    }
+  } catch(e) { console.warn('subtractXpFromUser error:', e.message); }
 }
 
 /* ================================================
@@ -376,7 +451,8 @@ function finishQuiz() {
 async function saveProgress(score, xpEarned, passed) {
   if (!currentUser) return;
   try {
-    await sb.from('quiz_results').upsert({
+    // 1. Catat hasil kuis ke tabel quiz_results (akan di-skip secara aman jika tabelnya belum dibuat di DB)
+    await sb.from('quiz_results').insert({
       user_id:   currentUser.id,
       floor_id:  floorId,
       score,
@@ -384,10 +460,28 @@ async function saveProgress(score, xpEarned, passed) {
       passed,
       taken_at:  new Date().toISOString(),
     });
-    if (passed) {
-      await sb.rpc('add_xp', { p_user_id: currentUser.id, p_xp: xpEarned }).catch(() => {});
+
+    // 2. Jika lolos kuis, catat juga ke user_module_progress agar floor.html mendeteksi kuis SELESAI
+    if (passed && quizModuleId) {
+      const { data: existing } = await sb
+        .from('user_module_progress')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('module_id', quizModuleId)
+        .maybeSingle();
+      
+      if (!existing) {
+        await sb.from('user_module_progress').insert({
+          user_id:      currentUser.id,
+          module_id:    quizModuleId,
+          floor_id:     actualFloorDbId, // Menyimpan ID asli dari tabel floors
+          completed:    true,
+          completed_at: new Date().toISOString(),
+        });
+        console.log('✅ Progress modul kuis berhasil didaftarkan ke user_module_progress!');
+      }
     }
-  } catch(e) { console.warn('Save progress:', e.message); }
+  } catch(e) { console.warn('Save progress error:', e.message); }
 }
 
 /* ================================================
@@ -395,6 +489,7 @@ async function saveProgress(score, xpEarned, passed) {
 ================================================ */
 function retryQuiz() {
   answers = [];
+  sessionXpEarned = 0; // Reset pelacak XP sesi sebelum memulai kuis ulang
   document.getElementById('resultScreen').classList.remove('show');
   document.getElementById('reviewScreen').classList.remove('show');
   document.getElementById('quizScreen').style.display = '';
