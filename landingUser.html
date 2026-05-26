@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeSaga - Dashboard</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Pixel Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="background-sky"></div>
+
+    <div class="game-wrapper">
+        <!-- Top Section -->
+        <header class="top-header">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="logo"><img src="assets/images/logo.png" alt="CodeSaga Logo"></div>
+                <div class="profile-container"><div class="profile"><img src="assets/images/person.jpg" alt="Profile"><p>Profile</p></div><i class="bi bi-caret-down-fill"></i></div>
+            </div>
+        </header>
+        
+        <div class="banner">
+            <h1 class="main-title">Start Your<br>Coding</h1>
+            <p>Let’s learn java programming through fun quizzes, level up your skills and become a CODE HERO!</p>
+            <button class="btn-start">Start Game<i class="bi bi-caret-right-fill"></i></button>            
+        </div>
+
+        <!-- Main Card Frame -->
+        <div class="main-card-frame">
+            <!-- Bunglon Maskot (Placeholder Image/Emoji) -->
+            <div class="mascot-chameleon">
+                <img src="assets/images/bunglon.png" alt="Bunglon Maskot">
+            </div>
+
+            <!-- Track Progress Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="icon-box"><img src="assets/icons/trophy.png" alt="Trophy Icon"></div>
+                <div class="section-title">Let's track<br>your progress!</div>
+            </div>
+
+            <!-- Current Stage Section -->
+            <div class="row gx-2">
+                <div class="col-8">
+                    <div class="stage-banner">Your current stage</div>
+                    <div class="d-flex" style="gap: 20px;">
+                        <div class="stage-card active">
+                            <div style="background-color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; border-radius: 25px;">
+                                <img src="assets/icons/modules.png" alt="Modules Icon">
+                            </div>
+                            <span>Modules</span>
+                            <div class="mt-1" style="font-size: 16px;">Start your journey by reading the books!</div>
+                        </div>
+                        <div class="stage-card">
+                            <div style="background-color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; border-radius: 25px;">
+                                <img src="assets/icons/practice.png" alt="Practice Icon">
+                            </div>
+                            <span>Practice</span>
+                            <div class="mt-1" style="font-size: 16px;">Put your skills to the test!</div>
+                        </div>
+                        <div class="stage-card locked">
+                            <div style="background-color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; border-radius: 25px;">
+                                <img src="assets/icons/quiz.png" alt="Quiz Icon">
+                            </div>
+                            <span>Quiz</span>
+                            <div class="mt-1" style="font-size: 16px;">Test your knowledge!</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div style="background: var(--accent-red); border-radius: 10px; height: 100%; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: 20px;">
+                        <div style="font-family: var(--pixel-font); font-size: 32px; margin-bottom: 5px;">Floor</div>
+                        <div><img src="assets/icons/stair.png" alt="Floor Icon"></div>
+                        <div style="font-family: var(--pixel-font); font-size: 40px; margin-top: 5px;">Floor 2</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Progress -->
+            <div class="progress-section">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box"><img src="assets/icons/crown.png" alt="Crown icon"></div>
+                    <div class="section-title">Overall progress</div>
+                    <div class="ms-auto" style="display: flex; align-items: center;">
+                        <img src="assets/icons/star.png" alt="Star icon" class="star-progress">
+                        <div class="ms-auto exp">87 <small>xp</small></div>
+                    </div>
+                </div>
+
+                <!-- Animated Progress Bar -->
+                <div style="position: relative; padding: 20px 0;">
+                    <!-- Karakter Lari -->
+                    <div class="char-runner" id="charRunner">
+                        <div><img src="assets/images/person-run.png" alt="Runner Icon"></div>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill" id="barFill"></div>
+                    </div>
+                    <!-- Peti Harta -->
+                    <div class="treasure-chest">
+                        <div><img src="assets/images/treasure-chest.png" alt="Treasure Chest Icon"></div>
+                    </div>
+                </div>
+
+                <div class="percentage-val" id="percentText">0%</div>
+                <div class="percentage-label">OF JAVA ADVENTURE COMPLETE</div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="mt-4">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box"><img src="assets/icons/badge.png" alt="Badge icon"></div>
+                    <div class="section-title">Achievements</div>
+                </div>
+                <div class="achievement-grid">
+                    <!-- Row 1 Unlocked -->
+                    <div class="achievement-item unlocked"><img src="assets/images/achievement - deep diver.png" alt="">Deep Diver</div>
+                    <div class="achievement-item unlocked"><img src="assets/images/achievement - hello world.png" alt="">Hello World</div>
+                    <div class="achievement-item unlocked"><img src="assets/images/achievement - logic master.png" alt="">Logic Master</div>
+                    <div class="achievement-item unlocked"><img src="assets/images/achievement - code knight.png" alt="">Code Knight</div>
+                    <div class="achievement-item unlocked"><img src="assets/images/achievement - bug hunter.png" alt="">Bug Hunter</div>
+                    <!-- Row 2 Locked -->
+                    <div class="achievement-item"><img src="assets/images/achievement - lock.png" alt="Locked achievement">???</div>
+                    <div class="achievement-item"><img src="assets/images/achievement - lock.png" alt="Locked achievement">???</div>
+                    <div class="achievement-item"><img src="assets/images/achievement - lock.png" alt="Locked achievement">???</div>
+                    <div class="achievement-item"><img src="assets/images/achievement - lock.png" alt="Locked achievement">???</div>
+                    <div class="achievement-item"><img src="assets/images/achievement - lock.png" alt="Locked achievement">???</div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-5 mb-5">
+                <div class="col-12">
+                    <div class="bottom-banner bg-danger text-white w-100 position-relative d-flex justify-content-center align-items-center" 
+                        style="height: 120px; border-radius: 40px; border: 4px solid #8b0000; box-shadow: 0 8px 0 #5a0000;">
+                        
+                        <img src="assets/icons/herorun.png" alt="Runner" 
+                            class="position-absolute start-0 translate-middle-y" 
+                            style="width: 170px; height: auto; top: 40%; left: 40px !important; z-index: 2;">
+    
+                        <h2 class="mb-0 text-center" 
+                            style="font-family: 'Jersey 25', sans-serif; font-size: 3.5rem; text-shadow: 4px 4px 0px #8b0000; z-index: 1;">
+                            Start your saga and get achievements!
+                        </h2>
+    
+                        <img src="assets/icons/chestfooter.png" alt="Chest" 
+                            class="position-absolute end-0 translate-middle-y" 
+                            style="width: 250px; height: 250px; top: 10%; right: 10px !important; z-index: 2;">
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- Footer Banner -->
+
+    <script src="js/pages/index.js"></script>
+</body>
+</html>
