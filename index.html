@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Code Saga</title>
 
+  <!-- Font -->
   <link
     href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
     rel="stylesheet"
@@ -24,6 +24,7 @@
     body {
       width: 100%;
       height: 100%;
+
       display: flex;
       align-items: center;
       justify-content: center;
@@ -34,26 +35,35 @@
         no-repeat;
 
       background-color: #2d5a1b;
+
+      overflow: hidden;
     }
 
     body::before {
       content: '';
+
       position: fixed;
       inset: 0;
+
       background: rgba(5, 20, 2, 0.5);
+
       pointer-events: none;
     }
 
     .splash {
       position: relative;
-      z-index: 1;
+      z-index: 2;
+
       text-align: center;
+
       animation: fadeIn 0.4s ease both;
     }
 
     .splash img {
-      height: 70px;
-      margin-bottom: 24px;
+      height: 80px;
+
+      margin-bottom: 30px;
+
       display: block;
       margin-left: auto;
       margin-right: auto;
@@ -63,25 +73,27 @@
       display: none;
 
       font-family: 'Press Start 2P', monospace;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
 
       color: #ffc107;
-      text-shadow: 2px 2px 0 #3e2723;
 
-      margin-bottom: 24px;
+      text-shadow: 3px 3px 0 #3e2723;
+
+      margin-bottom: 30px;
     }
 
     .dots {
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .dot {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
 
       background: #ffc107;
+
       border-radius: 50%;
 
       animation: bounce 0.8s ease infinite;
@@ -102,7 +114,7 @@
       }
 
       50% {
-        transform: translateY(-10px);
+        transform: translateY(-12px);
       }
     }
 
@@ -124,17 +136,18 @@
 
   <div class="splash">
 
-    <!-- logo -->
+    <!-- Logo -->
     <img
       src="assets/images/logo.png"
       alt="Code Saga"
+
       onerror="
         this.style.display='none';
         document.querySelector('.splash-text').style.display='block';
       "
     />
 
-    <!-- fallback -->
+    <!-- fallback text -->
     <div class="splash-text">
       Code Saga
     </div>
@@ -148,9 +161,20 @@
 
   </div>
 
-  <script type="module">
+  <!-- SUPABASE CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    import { sb } from './js/config/supabase.js';
+  <!-- SUPABASE CONFIG -->
+  <script src="js/config/supabase.js"></script>
+
+  <script>
+
+    /**
+     * INDEX REDIRECT
+     * -------------------------
+     * Sudah login  -> landingUser.html
+     * Belum login  -> landingGuest.html
+     */
 
     async function checkSession() {
 
@@ -165,12 +189,12 @@
           throw error;
         }
 
-        // delay kecil biar splash keliatan
+        // delay kecil supaya splash terlihat
         setTimeout(() => {
 
           if (session) {
 
-            // kalau ada halaman tujuan sebelumnya
+            // kalau sebelumnya ada halaman tujuan
             const savedUrl =
               sessionStorage.getItem('cs_after_login');
 
@@ -207,6 +231,7 @@
           err
         );
 
+        // fallback
         window.location.href = 'landingGuest.html';
 
       }

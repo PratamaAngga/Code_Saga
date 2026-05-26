@@ -19,8 +19,40 @@
         <header class="top-header">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="logo"><img src="assets/images/logo.png" alt="CodeSaga Logo"></div>
-                <div class="profile-container"><div class="profile"><img src="assets/images/person.jpg" alt="Profile"><p>Profile</p></div><i class="bi bi-caret-down-fill"></i></div>
-            </div>
+                <div class="profile-wrapper" id="profileDropdown">
+
+    <!-- tombol profile -->
+    <div class="profile-button" id="profileToggle">
+
+        <div class="profile-avatar">
+            U
+        </div>
+
+        <div class="profile-text">
+            Profile
+        </div>
+
+        <i class="bi bi-caret-down-fill dropdown-icon"></i>
+
+    </div>
+
+    <!-- dropdown -->
+    <div class="profile-menu" id="dropdownMenu">
+
+        <a href="profile.html" class="profile-menu-item">
+            <i class="bi bi-person-fill"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="logout.html" class="profile-menu-item logout">
+            <i class="bi bi-door-open-fill"></i>
+            <span>Logout</span>
+        </a>
+
+    </div>
+
+</div>
+</div>
         </header>
         
         <div class="banner">
@@ -156,5 +188,36 @@
     <!-- Footer Banner -->
 
     <script src="js/pages/index.js"></script>
+    <script>
+    const profileToggle =
+        document.getElementById('profileToggle');
+
+    const dropdownMenu =
+        document.getElementById('dropdownMenu');
+
+    profileToggle.addEventListener('click', () => {
+        dropdownMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+
+        const wrapper =
+            document.getElementById('profileDropdown');
+
+        if (!wrapper.contains(e.target)) {
+            dropdownMenu.classList.remove('show');
+        }
+
+    });
+
+    // start game
+    document
+        .querySelector('.btn-start')
+        .addEventListener('click', () => {
+
+            window.location.href = 'floor.html';
+
+        });
+</script>
 </body>
 </html>
